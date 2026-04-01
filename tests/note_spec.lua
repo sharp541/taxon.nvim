@@ -36,7 +36,7 @@ return {
       }, '\n'))
 
       helpers.eq({
-        tags = { 'animal/mammal/cat', 'Project/Client A' },
+        tags = { 'animal/mammal/cat', 'project/client a' },
         title = 'Cat Note',
       }, parsed)
     end,
@@ -54,8 +54,28 @@ return {
       }, '\n'))
 
       helpers.eq({
-        tags = { 'animal/mammal/cat', 'Client A / Draft' },
+        tags = { 'animal/mammal/cat', 'client a/draft' },
         title = 'Setext Title',
+      }, parsed)
+    end,
+  },
+  {
+    name = 'parse canonicalizes tag order and removes case-insensitive duplicates',
+    run = function()
+      local parsed = note.parse(table.concat({
+        '---',
+        'tags:',
+        '  - Zoo/Birds',
+        '  - foo / Bar',
+        '  - FOO/bar',
+        '---',
+        '',
+        '# Canonical Tags',
+      }, '\n'))
+
+      helpers.eq({
+        tags = { 'foo/bar', 'zoo/birds' },
+        title = 'Canonical Tags',
       }, parsed)
     end,
   },
@@ -113,6 +133,21 @@ return {
       local parsed, err = note.parse(table.concat({
         '---',
         'tags: not-a-list',
+        '---',
+        '',
+        '# Wrong',
+      }, '\n'))
+
+      helpers.eq(nil, parsed)
+      helpers.eq('invalid-tags', err)
+    end,
+  },
+  {
+    name = 'parse rejects tags that fail normalization',
+    run = function()
+      local parsed, err = note.parse(table.concat({
+        '---',
+        'tags: [animal//cat]',
         '---',
         '',
         '# Wrong',

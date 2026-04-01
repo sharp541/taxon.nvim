@@ -1,4 +1,5 @@
 local M = {}
+local tag = require('taxon.tag')
 
 local function is_blank(line)
   return line:match('^%s*$') ~= nil
@@ -179,8 +180,13 @@ local function parse_frontmatter(lines)
     return nil, 'missing-tags'
   end
 
+  local normalized_tags, err = tag.normalize_all(tags)
+  if normalized_tags == nil then
+    return nil, 'invalid-tags'
+  end
+
   return {
-    tags = tags,
+    tags = normalized_tags,
   }
 end
 

@@ -41,6 +41,14 @@ Current command:
 :TaxonOpen
 ```
 
+## Note Format
+
+Notes use YAML frontmatter with a `tags` list and the first Markdown H1 as the
+title. Tags are normalized to lowercase slash paths when Taxon reads them:
+whitespace around each segment is trimmed, spaces inside a segment and Japanese
+text are allowed, and empty segments, leading or trailing `/`, `//`, control
+characters, and newlines are rejected.
+
 ## Development
 
 - Format: `stylua lua plugin tests`

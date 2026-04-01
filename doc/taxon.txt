@@ -10,6 +10,17 @@ COMMANDS                                                  *taxon-commands*
     Open the configured notes directory.
 
 ==============================================================================
+NOTE FORMAT                                            *taxon-note-format*
+
+Notes use YAML frontmatter with a `tags` list and the first Markdown H1 as the
+title.
+
+Tags are normalized to lowercase slash-delimited paths when Taxon reads them.
+Whitespace around each segment is trimmed. Spaces inside a segment and Japanese
+text are allowed. Empty segments, leading or trailing `/`, `//`, control
+characters, and newlines are rejected.
+
+==============================================================================
 CONFIGURATION                                        *taxon-configuration*
 
 >
