@@ -28,7 +28,7 @@ These stay out of the MVP unless `docs/spec.md` changes:
 
 ## Status Board
 
-Recommended next task: `TAXON-MVP-08`
+Recommended next task: MVP complete
 
 | ID | Status | Depends On | Session Goal |
 | --- | --- | --- | --- |
@@ -41,7 +41,7 @@ Recommended next task: `TAXON-MVP-08`
 | TAXON-MVP-06 | done | TAXON-MVP-04 | Implement Telescope tag search using inherited tags |
 | TAXON-MVP-07 | done | TAXON-MVP-04 | Build the in-memory hierarchical tag tree model |
 | TAXON-MVP-08 | done | TAXON-MVP-07 | Implement the tag tree view and opening notes from that view |
-| TAXON-MVP-09 | todo | TAXON-MVP-03, TAXON-MVP-05, TAXON-MVP-06, TAXON-MVP-08 | Final MVP polish: command docs, help text, tests, acceptance pass |
+| TAXON-MVP-09 | done | TAXON-MVP-03, TAXON-MVP-05, TAXON-MVP-06, TAXON-MVP-08 | Final MVP polish: command docs, help text, tests, acceptance pass |
 
 ## Task Details
 
@@ -210,7 +210,7 @@ Done when:
 
 ### TAXON-MVP-08 Tag Tree View
 
-Status: `todo`
+Status: `done`
 
 Goal: expose the tag tree in Neovim and let the user open matching notes from
 the view.
@@ -230,7 +230,7 @@ Done when:
 
 ### TAXON-MVP-09 Final MVP Polish
 
-Status: `todo`
+Status: `done`
 
 Goal: finish the MVP as a coherent, documented plugin rather than a loose set of
 features.
@@ -265,3 +265,4 @@ Append one line at the end of each working session.
 | 2026-04-02 | TAXON-MVP-06 | done | working tree | Added `:TaxonTagSearch` and `search_tags()` using inherited tags, clear missing-Telescope errors, docs, and tests |
 | 2026-04-02 | TAXON-MVP-07 | done | working tree | Added deterministic `tag_tree` nodes with per-tag note membership to the scan model, plus docs and tests for hierarchy shape |
 | 2026-04-02 | TAXON-MVP-08 | done | working tree | Added `:TaxonTagTree` and `show_tag_tree()` with a dedicated scratch tree view, note opening from selected tags, docs, and headless tests |
+| 2026-04-02 | TAXON-MVP-09 | done | working tree | Finalized MVP command/docs coverage, added help-text and prompt tests, and verified the full suite passes |

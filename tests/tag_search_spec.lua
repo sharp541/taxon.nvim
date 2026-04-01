@@ -28,6 +28,7 @@ return {
     name = 'pick forwards the selected Telescope tag entry to the callback',
     run = function()
       local closed_prompt
+      local captured_prompt_title
       local picker_found = false
       local replaced_action
       local selected_tag
@@ -78,6 +79,8 @@ return {
           },
           pickers = {
             new = function(_, spec)
+              captured_prompt_title = spec.prompt_title
+
               return {
                 find = function()
                   picker_found = true
@@ -93,6 +96,7 @@ return {
       helpers.eq(true, ok)
       helpers.truthy(picker_found, 'picker was not started')
       helpers.eq(42, closed_prompt)
+      helpers.eq('Taxon Tag Search', captured_prompt_title)
       helpers.eq('animal', selected_tag)
     end,
   },

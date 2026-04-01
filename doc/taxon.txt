@@ -4,30 +4,66 @@ taxon.nvim is a note management plugin for Neovim built around hierarchical
 tags inspired by taxonomy.
 
 ==============================================================================
+OVERVIEW                                                    *taxon-overview*
+
+Taxon stores one Markdown note per file in |taxon-notes_dir|. Query commands
+rescan the directory on each invocation, derive parent tags in memory, and do
+not write a cache or index file in the MVP.
+
+|:TaxonTitleSearch| and |:TaxonTagSearch| require
+`nvim-telescope/telescope.nvim`. The rest of the MVP command surface does not.
+
+==============================================================================
 COMMANDS                                                  *taxon-commands*
 
-:TaxonOpen
-    Open the configured notes directory.
+:TaxonOpen                                                      *:TaxonOpen*
+    Create |taxon-notes_dir| if needed and open the configured notes
+    directory.
 
-:TaxonNew
+:TaxonNew                                                        *:TaxonNew*
     Prompt for a title, create a new note in |taxon-notes_dir|, and open it.
+    Titles are preserved in the timestamped filename unless they contain
+    filename-unsafe characters such as `/` or `\`.
 
-:TaxonTitleSearch
-    Search note titles with Telescope and open the selected note.
+:TaxonTitleSearch                                        *:TaxonTitleSearch*
+    Rescan |taxon-notes_dir|, search note titles with Telescope, and open the
+    selected note.
     If Telescope is unavailable, Taxon shows a clear error message.
 
-:TaxonTagSearch
-    Search normalized explicit and inherited tags with Telescope, then choose
-    and open a matching note.
+:TaxonTagSearch                                            *:TaxonTagSearch*
+    Rescan |taxon-notes_dir|, search normalized explicit and inherited tags
+    with Telescope, then choose and open a matching note.
     If Telescope is unavailable, Taxon shows a clear error message.
 
-:TaxonTagTree
+:TaxonTagTree                                                *:TaxonTagTree*
     Open the hierarchical tag tree in a dedicated vertical buffer.
     Press <CR> on a tag to open one of its matching notes, or `q` to close
     the tree view.
 
 ==============================================================================
 LUA API                                                    *taxon-lua-api*
+
+require('taxon').setup({ opts })                           *taxon-setup*
+    Store plugin configuration and ensure |taxon-notes_dir| exists.
+
+    If omitted, `notes_dir` defaults to:
+>
+        vim.fn.stdpath('data') .. '/taxon-notes'
+<
+
+require('taxon').open()                                     *taxon-open*
+    Create |taxon-notes_dir| if needed and open the configured notes
+    directory.
+
+require('taxon').create_note(title)                   *taxon-create_note*
+    Create a new note directly and return its full path.
+
+    New notes use the canonical Taxon note template and filenames in the form
+    `YYYYMMDD-HHMMSS-タイトル.md`.
+
+require('taxon').new_note()                             *taxon-new_note*
+    Prompt for a title and create a new note through the same flow used by
+    |:TaxonNew|.
 
 require('taxon').scan_notes()                           *taxon-scan_notes*
     Rescan |taxon-notes_dir| and return a query model with `notes`, `tags`,

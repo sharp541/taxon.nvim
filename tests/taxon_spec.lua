@@ -183,6 +183,20 @@ return {
     end,
   },
   {
+    name = 'registered Taxon commands expose the documented descriptions',
+    run = function()
+      local commands = vim.api.nvim_get_commands({
+        builtin = false,
+      })
+
+      helpers.eq('Open the taxon notes directory', commands.TaxonOpen.definition)
+      helpers.eq('Create a new taxon note', commands.TaxonNew.definition)
+      helpers.eq('Search taxon notes by title with Telescope', commands.TaxonTitleSearch.definition)
+      helpers.eq('Search taxon notes by tag with Telescope', commands.TaxonTagSearch.definition)
+      helpers.eq('Show the taxon tag tree', commands.TaxonTagTree.definition)
+    end,
+  },
+  {
     name = 'scan_notes rescans the configured notes directory on each call',
     run = function()
       helpers.with_temp_dir(function(temp_dir)
@@ -278,6 +292,78 @@ return {
           },
         }, rescanned.tag_tree)
       end)
+    end,
+  },
+  {
+    name = 'new_note prompts for a title and delegates note creation',
+    run = function()
+      local captured_prompt
+      local captured_title
+      local original_create_note = taxon.create_note
+      local original_input = vim.ui.input
+
+      vim.ui.input = function(opts, on_confirm)
+        captured_prompt = opts.prompt
+        on_confirm('Polished Note')
+      end
+
+      taxon.create_note = function(title)
+        captured_title = title
+        return '/tmp/polished-note.md'
+      end
+
+      local ok, err = pcall(taxon.new_note)
+
+      vim.ui.input = original_input
+      taxon.create_note = original_create_note
+
+      if not ok then
+        error(err)
+      end
+
+      helpers.eq('Taxon title: ', captured_prompt)
+      helpers.eq('Polished Note', captured_title)
+    end,
+  },
+  {
+    name = 'new_note reports clear create errors',
+    run = function()
+      local notifications = {}
+      local original_create_note = taxon.create_note
+      local original_input = vim.ui.input
+      local original_notify = vim.notify
+
+      vim.ui.input = function(_, on_confirm)
+        on_confirm('bad/name')
+      end
+
+      taxon.create_note = function()
+        return nil, 'unsafe-title'
+      end
+
+      vim.notify = function(message, level)
+        table.insert(notifications, {
+          level = level,
+          message = message,
+        })
+      end
+
+      local ok, err = pcall(taxon.new_note)
+
+      vim.notify = original_notify
+      vim.ui.input = original_input
+      taxon.create_note = original_create_note
+
+      if not ok then
+        error(err)
+      end
+
+      helpers.eq({
+        {
+          level = vim.log.levels.ERROR,
+          message = 'Taxon: title contains filename-unsafe characters',
+        },
+      }, notifications)
     end,
   },
   {
@@ -443,6 +529,44 @@ return {
           message = 'Taxon: tag search requires Telescope (nvim-telescope/telescope.nvim)',
         },
       }, notifications)
+    end,
+  },
+  {
+    name = 'search_tags uses the selected tag in the note picker prompt',
+    run = function()
+      helpers.with_temp_dir(function(temp_dir)
+        local notes_dir = vim.fs.joinpath(temp_dir, 'notes')
+        local path = vim.fs.joinpath(notes_dir, '20260402-010203-cat.md')
+
+        taxon.setup({
+          notes_dir = notes_dir,
+        })
+
+        vim.fn.writefile({
+          '---',
+          'tags: [animal/mammal/cat]',
+          '---',
+          '',
+          '# Cat Note',
+        }, path)
+
+        local captured_prompt_title
+        local result = taxon.search_tags({
+          pick_tag = function(_, opts)
+            opts.on_select({
+              tag = 'animal',
+            })
+            return true
+          end,
+          pick_notes = function(_, opts)
+            captured_prompt_title = opts.prompt_title
+            return true
+          end,
+        })
+
+        helpers.eq(true, result)
+        helpers.eq('Taxon Tag Search: animal', captured_prompt_title)
+      end)
     end,
   },
   {
