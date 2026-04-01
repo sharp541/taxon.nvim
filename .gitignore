@@ -3,6 +3,7 @@
 *.tmp
 *.swp
 *.swo
+.nvimlog
 tags
 doc/tags
 

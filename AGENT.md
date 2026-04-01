@@ -11,8 +11,9 @@ Use this file as a router only. Prefer code and tests over prose.
 
 ## Commands
 
-- Format: `stylua lua plugin`
-- Test: no command is defined yet
+- Format: `stylua lua plugin tests`
+- Install hooks: `./scripts/install-hooks`
+- Test: `./scripts/test`
 - Build: no command is defined yet
 - Deploy: no command is defined yet
 

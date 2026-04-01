@@ -42,6 +42,8 @@ Current command:
 
 ## Development
 
-- Format: `stylua lua plugin`
+- Format: `stylua lua plugin tests`
+- Install hooks: `./scripts/install-hooks`
+- Test: `./scripts/test`
 - Runtime entrypoint: `plugin/taxon.lua`
 - Core module: `lua/taxon/init.lua`

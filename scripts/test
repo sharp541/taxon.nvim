@@ -1,0 +1,32 @@
+#!/usr/bin/env sh
+set -eu
+
+ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+TMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/taxon-test.XXXXXX")
+
+cleanup() {
+  rm -rf "$TMP_DIR"
+}
+
+trap cleanup EXIT INT TERM
+
+cd "$ROOT_DIR"
+
+export XDG_CONFIG_HOME="$TMP_DIR/config"
+export XDG_DATA_HOME="$TMP_DIR/data"
+export XDG_STATE_HOME="$TMP_DIR/state"
+export XDG_CACHE_HOME="$TMP_DIR/cache"
+export NVIM_LOG_FILE="$TMP_DIR/nvim.log"
+
+NVIM_BIN=${NVIM_BIN:-nvim}
+
+if "$NVIM_BIN" --version >/dev/null 2>&1; then
+  exec "$NVIM_BIN" --headless -u tests/minimal_init.lua -i NONE "+lua dofile('tests/run.lua')"
+fi
+
+if "$NVIM_BIN" --appimage-extract-and-run --version >/dev/null 2>&1; then
+  exec "$NVIM_BIN" --appimage-extract-and-run --headless -u tests/minimal_init.lua -i NONE "+lua dofile('tests/run.lua')"
+fi
+
+printf '%s\n' "Unable to execute Neovim with $NVIM_BIN" >&2
+exit 1

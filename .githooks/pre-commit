@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR=$(git rev-parse --show-toplevel)
+cd "$ROOT_DIR"
+
+if ! command -v stylua >/dev/null 2>&1; then
+  printf '%s\n' 'stylua is required for the pre-commit hook.' >&2
+  exit 1
+fi
+
+staged_files=()
+while IFS= read -r -d '' file; do
+  staged_files+=("$file")
+done < <(git diff --cached --name-only --diff-filter=ACMR -z -- '*.lua')
+
+if [ "${#staged_files[@]}" -eq 0 ]; then
+  exit 0
+fi
+
+conflicted_files=()
+for file in "${staged_files[@]}"; do
+  if ! git diff --quiet -- "$file"; then
+    conflicted_files+=("$file")
+  fi
+done
+
+if [ "${#conflicted_files[@]}" -gt 0 ]; then
+  printf '%s\n' 'Refusing to format staged Lua files with unstaged changes:' >&2
+  printf '  %s\n' "${conflicted_files[@]}" >&2
+  printf '%s\n' 'Stage or stash those changes, then commit again.' >&2
+  exit 1
+fi
+
+stylua "${staged_files[@]}"
+git add -- "${staged_files[@]}"
