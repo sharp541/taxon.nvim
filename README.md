@@ -6,8 +6,9 @@ only by folders.
 
 ## Status
 
-The repository now includes note parsing, tag normalization, and timestamped
-new-note creation. The remaining MVP definition lives in
+The repository now includes note parsing, tag normalization, timestamped
+new-note creation, and on-demand note scanning with inherited parent-tag
+expansion. The remaining MVP definition lives in
 [`docs/spec.md`](docs/spec.md).
 
 ## Docs
@@ -47,6 +48,18 @@ Current commands:
 `YYYYMMDD-HHMMSS-タイトル.md` in `notes_dir`, writes the canonical note template,
 and opens the new buffer. Titles are preserved in the filename, but path-unsafe
 characters such as `/` and `\\` are rejected explicitly.
+
+Lua API:
+
+```lua
+local model = require("taxon").scan_notes()
+```
+
+`scan_notes()` rescans `notes_dir` on each call and returns a query model with
+`notes`, `tags`, `notes_by_title`, `notes_by_tag`, and `invalid_notes`.
+Per-note `tags` include both explicit frontmatter tags and inherited parent
+tags. Invalid Markdown notes are skipped deterministically and reported through
+`invalid_notes`.
 
 ## Note Format
 

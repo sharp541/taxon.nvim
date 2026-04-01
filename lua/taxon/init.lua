@@ -6,6 +6,7 @@ local default_config = {
 
 M.config = vim.deepcopy(default_config)
 M.note = require('taxon.note')
+M.query = require('taxon.query')
 
 local function ensure_notes_dir(path)
   local stat = vim.uv.fs_stat(path)
@@ -100,6 +101,11 @@ function M.create_note(title, opts)
   end
 
   return path
+end
+
+function M.scan_notes()
+  ensure_notes_dir(M.config.notes_dir)
+  return M.query.scan_dir(M.config.notes_dir)
 end
 
 function M.new_note()

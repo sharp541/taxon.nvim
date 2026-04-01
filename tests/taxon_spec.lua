@@ -103,4 +103,46 @@ return {
       helpers.truthy(called, 'TaxonNew did not call require("taxon").new_note()')
     end,
   },
+  {
+    name = 'scan_notes rescans the configured notes directory on each call',
+    run = function()
+      helpers.with_temp_dir(function(temp_dir)
+        local notes_dir = vim.fs.joinpath(temp_dir, 'notes')
+
+        taxon.setup({
+          notes_dir = notes_dir,
+        })
+
+        local initial = taxon.scan_notes()
+
+        helpers.eq({}, initial.notes)
+        helpers.eq({}, initial.tags)
+        helpers.eq({}, initial.invalid_notes)
+
+        local path = vim.fs.joinpath(notes_dir, '20260402-010203-note.md')
+        vim.fn.writefile({
+          '---',
+          'tags: [animal/mammal/cat]',
+          '---',
+          '',
+          '# Rescanned Note',
+        }, path)
+
+        local rescanned = taxon.scan_notes()
+
+        helpers.eq({
+          {
+            explicit_tags = { 'animal/mammal/cat' },
+            path = path,
+            tags = {
+              'animal',
+              'animal/mammal',
+              'animal/mammal/cat',
+            },
+            title = 'Rescanned Note',
+          },
+        }, rescanned.notes)
+      end)
+    end,
+  },
 }

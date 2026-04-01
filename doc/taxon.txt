@@ -13,6 +13,18 @@ COMMANDS                                                  *taxon-commands*
     Prompt for a title, create a new note in |taxon-notes_dir|, and open it.
 
 ==============================================================================
+LUA API                                                    *taxon-lua-api*
+
+require('taxon').scan_notes()                           *taxon-scan_notes*
+    Rescan |taxon-notes_dir| and return a query model with `notes`, `tags`,
+    `notes_by_title`, `notes_by_tag`, and `invalid_notes`.
+
+    Each note entry includes `path`, `title`, `explicit_tags`, and `tags`.
+    The `tags` field contains both explicit frontmatter tags and inherited
+    parent tags. Invalid Markdown notes are skipped deterministically and
+    reported through `invalid_notes`.
+
+==============================================================================
 NOTE FORMAT                                            *taxon-note-format*
 
 Notes use YAML frontmatter with a `tags` list and the first Markdown H1 as the
