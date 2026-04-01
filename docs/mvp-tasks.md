@@ -37,7 +37,7 @@ Recommended next task: `TAXON-MVP-05`
 | TAXON-MVP-02 | done | TAXON-MVP-01 | Implement tag normalization and validation rules from the spec |
 | TAXON-MVP-03 | done | TAXON-MVP-01, TAXON-MVP-02 | Implement new-note creation flow with timestamped filenames and a user command |
 | TAXON-MVP-04 | done | TAXON-MVP-01, TAXON-MVP-02 | Implement on-demand note scanning and derived parent-tag expansion |
-| TAXON-MVP-05 | todo | TAXON-MVP-04 | Implement Telescope title search and note opening |
+| TAXON-MVP-05 | done | TAXON-MVP-04 | Implement Telescope title search and note opening |
 | TAXON-MVP-06 | todo | TAXON-MVP-04 | Implement Telescope tag search using inherited tags |
 | TAXON-MVP-07 | todo | TAXON-MVP-04 | Build the in-memory hierarchical tag tree model |
 | TAXON-MVP-08 | todo | TAXON-MVP-07 | Implement the tag tree view and opening notes from that view |
@@ -261,3 +261,4 @@ Append one line at the end of each working session.
 | 2026-04-02 | TAXON-MVP-02 | done | working tree | Added shared tag normalization with lowercase canonicalization, validation, deterministic ordering, and note-parser integration |
 | 2026-04-02 | TAXON-MVP-03 | done | working tree | Added `:TaxonNew`, deterministic timestamped filename creation, safe-title validation, docs, and tests for file creation flow |
 | 2026-04-02 | TAXON-MVP-04 | done | working tree | Added on-demand scan/query modeling with inherited parent tags, deterministic invalid-note reporting, docs, and tests |
+| 2026-04-02 | TAXON-MVP-05 | done | working tree | Added `:TaxonTitleSearch` and `search_titles()` with a testable Telescope adapter, clear missing-Telescope errors, docs, and note-opening tests |

@@ -7,6 +7,7 @@ local default_config = {
 M.config = vim.deepcopy(default_config)
 M.note = require('taxon.note')
 M.query = require('taxon.query')
+M.title_search = require('taxon.title_search')
 
 local function ensure_notes_dir(path)
   local stat = vim.uv.fs_stat(path)
@@ -51,6 +52,17 @@ local function notify_create_error(err)
 
   vim.notify(
     messages[err] or ('Taxon: failed to create note (' .. err .. ')'),
+    vim.log.levels.ERROR
+  )
+end
+
+local function notify_search_error(err)
+  local messages = {
+    ['missing-telescope'] = 'Taxon: title search requires Telescope (nvim-telescope/telescope.nvim)',
+  }
+
+  vim.notify(
+    messages[err] or ('Taxon: failed to search titles (' .. err .. ')'),
     vim.log.levels.ERROR
   )
 end
@@ -121,6 +133,37 @@ function M.new_note()
       notify_create_error(err)
     end
   end)
+end
+
+function M.search_titles(opts)
+  vim.validate({
+    opts = { opts, 'table', true },
+  })
+
+  opts = opts or {}
+
+  local model, err = M.scan_notes()
+  if model == nil then
+    notify_search_error(err)
+    return nil, err
+  end
+
+  local entries = M.title_search.build_entries(model.notes)
+  local pick = opts.pick or M.title_search.pick
+  local ok
+
+  ok, err = pick(entries, {
+    open = opts.open or edit_path,
+    prompt_title = opts.prompt_title,
+    telescope = opts.telescope,
+  })
+
+  if ok == nil then
+    notify_search_error(err)
+    return nil, err
+  end
+
+  return true
 end
 
 return M

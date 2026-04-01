@@ -2,6 +2,7 @@ local suites = {
   'tests/tag_spec.lua',
   'tests/note_spec.lua',
   'tests/query_spec.lua',
+  'tests/title_search_spec.lua',
   'tests/taxon_spec.lua',
 }
 

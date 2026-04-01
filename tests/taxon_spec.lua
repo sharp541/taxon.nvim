@@ -104,6 +104,35 @@ return {
     end,
   },
   {
+    name = 'TaxonTitleSearch command dispatches to the module',
+    run = function()
+      helpers.eq(
+        2,
+        vim.fn.exists(':TaxonTitleSearch'),
+        'TaxonTitleSearch command is not registered'
+      )
+
+      local called = false
+      local original_search_titles = taxon.search_titles
+
+      taxon.search_titles = function()
+        called = true
+      end
+
+      local ok, err = pcall(vim.api.nvim_cmd, {
+        cmd = 'TaxonTitleSearch',
+      }, {})
+
+      taxon.search_titles = original_search_titles
+
+      if not ok then
+        error(err)
+      end
+
+      helpers.truthy(called, 'TaxonTitleSearch did not call require("taxon").search_titles()')
+    end,
+  },
+  {
     name = 'scan_notes rescans the configured notes directory on each call',
     run = function()
       helpers.with_temp_dir(function(temp_dir)
@@ -143,6 +172,76 @@ return {
           },
         }, rescanned.notes)
       end)
+    end,
+  },
+  {
+    name = 'search_titles scans notes, builds picker entries, and starts the picker',
+    run = function()
+      helpers.with_temp_dir(function(temp_dir)
+        local notes_dir = vim.fs.joinpath(temp_dir, 'notes')
+        local path = vim.fs.joinpath(notes_dir, '20260402-010203-cat.md')
+
+        taxon.setup({
+          notes_dir = notes_dir,
+        })
+
+        vim.fn.writefile({
+          '---',
+          'tags: [animal/mammal/cat]',
+          '---',
+          '',
+          '# Cat Note',
+        }, path)
+
+        local captured_entries
+        local result = taxon.search_titles({
+          pick = function(entries, _)
+            captured_entries = entries
+            return true
+          end,
+        })
+
+        helpers.eq(true, result)
+        helpers.eq({
+          {
+            display = 'Cat Note [20260402-010203-cat.md]',
+            ordinal = 'Cat Note 20260402-010203-cat.md ' .. path,
+            path = path,
+            title = 'Cat Note',
+          },
+        }, captured_entries)
+      end)
+    end,
+  },
+  {
+    name = 'search_titles reports a clear error when Telescope is unavailable',
+    run = function()
+      local notifications = {}
+      local original_notify = vim.notify
+
+      vim.notify = function(message, level)
+        table.insert(notifications, {
+          level = level,
+          message = message,
+        })
+      end
+
+      local ok, err = taxon.search_titles({
+        pick = function()
+          return nil, 'missing-telescope'
+        end,
+      })
+
+      vim.notify = original_notify
+
+      helpers.eq(nil, ok)
+      helpers.eq('missing-telescope', err)
+      helpers.eq({
+        {
+          level = vim.log.levels.ERROR,
+          message = 'Taxon: title search requires Telescope (nvim-telescope/telescope.nvim)',
+        },
+      }, notifications)
     end,
   },
 }

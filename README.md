@@ -42,6 +42,7 @@ Current commands:
 ```vim
 :TaxonOpen
 :TaxonNew
+:TaxonTitleSearch
 ```
 
 `:TaxonNew` prompts for a title, creates
@@ -49,10 +50,15 @@ Current commands:
 and opens the new buffer. Titles are preserved in the filename, but path-unsafe
 characters such as `/` and `\\` are rejected explicitly.
 
+`:TaxonTitleSearch` rescans `notes_dir`, feeds note titles into Telescope, and
+opens the selected note. If Telescope is not installed, Taxon reports a clear
+error instead of raising a raw Lua stack trace.
+
 Lua API:
 
 ```lua
 local model = require("taxon").scan_notes()
+require("taxon").search_titles()
 ```
 
 `scan_notes()` rescans `notes_dir` on each call and returns a query model with
@@ -60,6 +66,9 @@ local model = require("taxon").scan_notes()
 Per-note `tags` include both explicit frontmatter tags and inherited parent
 tags. Invalid Markdown notes are skipped deterministically and reported through
 `invalid_notes`.
+
+`search_titles()` uses the same scan model to populate a Telescope picker from
+note titles and opens the selected note path.
 
 ## Note Format
 

@@ -12,6 +12,10 @@ COMMANDS                                                  *taxon-commands*
 :TaxonNew
     Prompt for a title, create a new note in |taxon-notes_dir|, and open it.
 
+:TaxonTitleSearch
+    Search note titles with Telescope and open the selected note.
+    If Telescope is unavailable, Taxon shows a clear error message.
+
 ==============================================================================
 LUA API                                                    *taxon-lua-api*
 
@@ -23,6 +27,13 @@ require('taxon').scan_notes()                           *taxon-scan_notes*
     The `tags` field contains both explicit frontmatter tags and inherited
     parent tags. Invalid Markdown notes are skipped deterministically and
     reported through `invalid_notes`.
+
+require('taxon').search_titles()                     *taxon-search_titles*
+    Rescan |taxon-notes_dir|, feed note titles into a Telescope picker, and
+    open the selected note.
+
+    If Telescope is unavailable, Taxon shows a clear error message instead of
+    raising a raw Lua stack trace.
 
 ==============================================================================
 NOTE FORMAT                                            *taxon-note-format*

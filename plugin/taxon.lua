@@ -15,3 +15,9 @@ vim.api.nvim_create_user_command('TaxonNew', function()
 end, {
   desc = 'Create a new taxon note',
 })
+
+vim.api.nvim_create_user_command('TaxonTitleSearch', function()
+  require('taxon').search_titles()
+end, {
+  desc = 'Search taxon notes by title with Telescope',
+})
