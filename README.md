@@ -12,6 +12,7 @@ for the first usable version lives in [`docs/spec.md`](docs/spec.md).
 ## Docs
 
 - Specification: [`docs/spec.md`](docs/spec.md)
+- MVP task board: [`docs/mvp-tasks.md`](docs/mvp-tasks.md)
 - Architecture decisions: [`docs/adr/`](docs/adr/)
 - Neovim help: [`doc/taxon.txt`](doc/taxon.txt)
 
