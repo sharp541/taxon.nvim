@@ -5,6 +5,40 @@ local function is_blank(line)
   return line:match('^%s*$') ~= nil
 end
 
+local function normalize_title(title)
+  local trimmed_title = vim.trim(title)
+  if trimmed_title == '' or trimmed_title:find('%c') ~= nil then
+    return nil, 'invalid-title'
+  end
+
+  return trimmed_title
+end
+
+local function validate_filename_title(title)
+  local trimmed_title, err = normalize_title(title)
+  if trimmed_title == nil then
+    return nil, err
+  end
+
+  if trimmed_title:find('[/\\:*?"<>|]') ~= nil then
+    return nil, 'unsafe-title'
+  end
+
+  return trimmed_title
+end
+
+local function format_timestamp(now)
+  return string.format(
+    '%04d%02d%02d-%02d%02d%02d',
+    now.year,
+    now.month,
+    now.day,
+    now.hour,
+    now.min,
+    now.sec
+  )
+end
+
 local function parse_scalar(raw)
   local value = vim.trim(raw)
 
@@ -296,9 +330,9 @@ function M.render(title)
     title = { title, 'string' },
   })
 
-  local trimmed_title = vim.trim(title)
-  if trimmed_title == '' or trimmed_title:find('[\r\n]') ~= nil then
-    return nil, 'invalid-title'
+  local trimmed_title, err = normalize_title(title)
+  if trimmed_title == nil then
+    return nil, err
   end
 
   return table.concat({
@@ -309,6 +343,21 @@ function M.render(title)
     '# ' .. trimmed_title,
     '',
   }, '\n')
+end
+
+function M.filename(title, now)
+  vim.validate({
+    title = { title, 'string' },
+    now = { now, 'table', true },
+  })
+
+  local trimmed_title, err = validate_filename_title(title)
+  if trimmed_title == nil then
+    return nil, err
+  end
+
+  local timestamp = format_timestamp(now or os.date('*t'))
+  return string.format('%s-%s.md', timestamp, trimmed_title)
 end
 
 return M

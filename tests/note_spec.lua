@@ -21,6 +21,21 @@ return {
     end,
   },
   {
+    name = 'filename builds the timestamped note path from a fixed time',
+    run = function()
+      local filename = note.filename(' タイトル ', {
+        year = 2026,
+        month = 4,
+        day = 2,
+        hour = 1,
+        min = 2,
+        sec = 3,
+      })
+
+      helpers.eq('20260402-010203-タイトル.md', filename)
+    end,
+  },
+  {
     name = 'parse reads tags and the first H1 title from a note',
     run = function()
       local parsed = note.parse(table.concat({
@@ -179,6 +194,22 @@ return {
 
       helpers.eq(nil, content)
       helpers.eq('invalid-title', err)
+    end,
+  },
+  {
+    name = 'filename rejects titles with filename-unsafe characters',
+    run = function()
+      local filename, err = note.filename('bad/name', {
+        year = 2026,
+        month = 4,
+        day = 2,
+        hour = 1,
+        min = 2,
+        sec = 3,
+      })
+
+      helpers.eq(nil, filename)
+      helpers.eq('unsafe-title', err)
     end,
   },
 }

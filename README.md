@@ -6,8 +6,9 @@ only by folders.
 
 ## Status
 
-The repository is at the initial scaffold stage. The current product definition
-for the first usable version lives in [`docs/spec.md`](docs/spec.md).
+The repository now includes note parsing, tag normalization, and timestamped
+new-note creation. The remaining MVP definition lives in
+[`docs/spec.md`](docs/spec.md).
 
 ## Docs
 
@@ -35,11 +36,17 @@ require("taxon").setup({
 })
 ```
 
-Current command:
+Current commands:
 
 ```vim
 :TaxonOpen
+:TaxonNew
 ```
+
+`:TaxonNew` prompts for a title, creates
+`YYYYMMDD-HHMMSS-タイトル.md` in `notes_dir`, writes the canonical note template,
+and opens the new buffer. Titles are preserved in the filename, but path-unsafe
+characters such as `/` and `\\` are rejected explicitly.
 
 ## Note Format
 
@@ -48,6 +55,9 @@ title. Tags are normalized to lowercase slash paths when Taxon reads them:
 whitespace around each segment is trimmed, spaces inside a segment and Japanese
 text are allowed, and empty segments, leading or trailing `/`, `//`, control
 characters, and newlines are rejected.
+
+New notes use timestamp-prefixed filenames in the form
+`YYYYMMDD-HHMMSS-タイトル.md`.
 
 ## Development
 

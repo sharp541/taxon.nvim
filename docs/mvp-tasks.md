@@ -28,14 +28,14 @@ These stay out of the MVP unless `docs/spec.md` changes:
 
 ## Status Board
 
-Recommended next task: `TAXON-MVP-03`
+Recommended next task: `TAXON-MVP-04`
 
 | ID | Status | Depends On | Session Goal |
 | --- | --- | --- | --- |
 | TAXON-MVP-00 | done | - | Baseline scaffold: `setup()`, notes directory creation, `TaxonOpen` |
 | TAXON-MVP-01 | done | TAXON-MVP-00 | Implement note format primitives: frontmatter `tags`, first-H1 title extraction, canonical note template |
 | TAXON-MVP-02 | done | TAXON-MVP-01 | Implement tag normalization and validation rules from the spec |
-| TAXON-MVP-03 | todo | TAXON-MVP-01, TAXON-MVP-02 | Implement new-note creation flow with timestamped filenames and a user command |
+| TAXON-MVP-03 | done | TAXON-MVP-01, TAXON-MVP-02 | Implement new-note creation flow with timestamped filenames and a user command |
 | TAXON-MVP-04 | todo | TAXON-MVP-01, TAXON-MVP-02 | Implement on-demand note scanning and derived parent-tag expansion |
 | TAXON-MVP-05 | todo | TAXON-MVP-04 | Implement Telescope title search and note opening |
 | TAXON-MVP-06 | todo | TAXON-MVP-04 | Implement Telescope tag search using inherited tags |
@@ -108,7 +108,7 @@ Done when:
 
 ### TAXON-MVP-03 New Note Creation Flow
 
-Status: `todo`
+Status: `done`
 
 Goal: let the user create a note from a command with the required filename and
 body shape.
@@ -259,3 +259,4 @@ Append one line at the end of each working session.
 | 2026-04-01 | TAXON-MVP-00 | done | working tree baseline | `setup()`, notes directory creation, and `TaxonOpen` already exist with tests |
 | 2026-04-01 | TAXON-MVP-01 | done | working tree | Added `taxon.note` parsing/rendering primitives with deterministic rejection paths and test coverage |
 | 2026-04-02 | TAXON-MVP-02 | done | working tree | Added shared tag normalization with lowercase canonicalization, validation, deterministic ordering, and note-parser integration |
+| 2026-04-02 | TAXON-MVP-03 | done | working tree | Added `:TaxonNew`, deterministic timestamped filename creation, safe-title validation, docs, and tests for file creation flow |

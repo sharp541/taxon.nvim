@@ -9,3 +9,9 @@ vim.api.nvim_create_user_command('TaxonOpen', function()
 end, {
   desc = 'Open the taxon notes directory',
 })
+
+vim.api.nvim_create_user_command('TaxonNew', function()
+  require('taxon').new_note()
+end, {
+  desc = 'Create a new taxon note',
+})

@@ -9,11 +9,28 @@ COMMANDS                                                  *taxon-commands*
 :TaxonOpen
     Open the configured notes directory.
 
+:TaxonNew
+    Prompt for a title, create a new note in |taxon-notes_dir|, and open it.
+
 ==============================================================================
 NOTE FORMAT                                            *taxon-note-format*
 
 Notes use YAML frontmatter with a `tags` list and the first Markdown H1 as the
 title.
+
+New notes are created with this shape:
+
+>
+    ---
+    tags: []
+    ---
+
+    # Title
+<
+
+New notes use timestamp-prefixed filenames in the form
+`YYYYMMDD-HHMMSS-タイトル.md`. Titles are preserved in the filename, but
+filename-unsafe characters such as `/` and `\` are rejected.
 
 Tags are normalized to lowercase slash-delimited paths when Taxon reads them.
 Whitespace around each segment is trimmed. Spaces inside a segment and Japanese
@@ -29,7 +46,7 @@ CONFIGURATION                                        *taxon-configuration*
     })
 <
 
-`notes_dir`
+`notes_dir`                                              *taxon-notes_dir*
     Directory used to store Taxon-managed notes.
 
 ==============================================================================
