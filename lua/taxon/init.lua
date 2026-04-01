@@ -8,6 +8,7 @@ M.config = vim.deepcopy(default_config)
 M.note = require('taxon.note')
 M.query = require('taxon.query')
 M.tag_search = require('taxon.tag_search')
+M.tag_tree_view = require('taxon.tag_tree_view')
 M.title_search = require('taxon.title_search')
 
 local function ensure_notes_dir(path)
@@ -65,9 +66,11 @@ local function notify_search_error(kind, err)
     title = {
       ['missing-telescope'] = 'Taxon: title search requires Telescope (nvim-telescope/telescope.nvim)',
     },
+    tree = {},
   }
   local action = ({
     tag = 'search tags',
+    tree = 'open the tag tree',
     title = 'search titles',
   })[kind] or 'complete the search'
 
@@ -224,6 +227,43 @@ function M.search_tags(opts)
   end
 
   return true
+end
+
+function M.show_tag_tree(opts)
+  vim.validate({
+    opts = { opts, 'table', true },
+  })
+
+  opts = opts or {}
+
+  local model, err = M.scan_notes()
+  if model == nil then
+    notify_search_error('tree', err)
+    return nil, err
+  end
+
+  local show = opts.show or M.tag_tree_view.open
+  local ok
+
+  ok, err = show(model.tag_tree, {
+    empty_message = opts.empty_message,
+    indent = opts.indent,
+    keep_focus = opts.keep_focus,
+    note_prompt_title = opts.note_prompt_title,
+    open = opts.open or edit_path,
+    open_window = opts.open_window,
+    select_note = opts.select_note,
+    source_win = opts.source_win,
+    width = opts.width,
+    window_command = opts.window_command,
+  })
+
+  if ok == nil then
+    notify_search_error('tree', err)
+    return nil, err
+  end
+
+  return ok
 end
 
 return M

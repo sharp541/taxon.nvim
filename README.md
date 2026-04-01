@@ -8,8 +8,9 @@ only by folders.
 
 The repository now includes note parsing, tag normalization, timestamped
 new-note creation, on-demand note scanning with inherited parent-tag expansion,
-a hierarchical in-memory tag-tree model, and Telescope search by title and tag.
-The remaining MVP definition lives in [`docs/spec.md`](docs/spec.md).
+a hierarchical in-memory tag-tree model, a dedicated tag tree view, and
+Telescope search by title and tag. The remaining MVP definition lives in
+[`docs/spec.md`](docs/spec.md).
 
 ## Docs
 
@@ -44,6 +45,7 @@ Current commands:
 :TaxonNew
 :TaxonTitleSearch
 :TaxonTagSearch
+:TaxonTagTree
 ```
 
 `:TaxonNew` prompts for a title, creates
@@ -60,12 +62,17 @@ and inherited tags in Telescope, then shows the notes that match the selected
 tag and opens the chosen note. If Telescope is not installed, Taxon reports a
 clear error instead of raising a raw Lua stack trace.
 
+`:TaxonTagTree` rescans `notes_dir` and opens a dedicated vertical tree buffer
+that shows the hierarchical tag model with per-tag note counts. Press `<CR>` on
+the current tag to open one of its matching notes, or `q` to close the tree.
+
 Lua API:
 
 ```lua
 local model = require("taxon").scan_notes()
 require("taxon").search_titles()
 require("taxon").search_tags()
+require("taxon").show_tag_tree()
 ```
 
 `scan_notes()` rescans `notes_dir` on each call and returns a query model with
@@ -81,6 +88,10 @@ note titles and opens the selected note path.
 `search_tags()` uses the scan model's inherited tag index to populate a
 Telescope tag picker, then opens a second picker with the matching notes for
 the selected tag.
+
+`show_tag_tree()` uses the same scan model to render a dedicated tag tree view.
+Selecting a tag opens the only matching note directly, or prompts you to choose
+when the tag contains multiple notes.
 
 ## Note Format
 

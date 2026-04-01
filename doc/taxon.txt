@@ -21,6 +21,11 @@ COMMANDS                                                  *taxon-commands*
     and open a matching note.
     If Telescope is unavailable, Taxon shows a clear error message.
 
+:TaxonTagTree
+    Open the hierarchical tag tree in a dedicated vertical buffer.
+    Press <CR> on a tag to open one of its matching notes, or `q` to close
+    the tree view.
+
 ==============================================================================
 LUA API                                                    *taxon-lua-api*
 
@@ -50,6 +55,14 @@ require('taxon').search_tags()                         *taxon-search_tags*
 
     If Telescope is unavailable, Taxon shows a clear error message instead of
     raising a raw Lua stack trace.
+
+require('taxon').show_tag_tree()                     *taxon-show_tag_tree*
+    Rescan |taxon-notes_dir| and render the deterministic tag hierarchy in a
+    dedicated vertical buffer.
+
+    Press <CR> on a tag to open its only matching note directly, or choose
+    from the matching notes when the tag contains more than one note. Press
+    `q` to close the tree buffer.
 
 ==============================================================================
 NOTE FORMAT                                            *taxon-note-format*

@@ -158,6 +158,31 @@ return {
     end,
   },
   {
+    name = 'TaxonTagTree command dispatches to the module',
+    run = function()
+      helpers.eq(2, vim.fn.exists(':TaxonTagTree'), 'TaxonTagTree command is not registered')
+
+      local called = false
+      local original_show_tag_tree = taxon.show_tag_tree
+
+      taxon.show_tag_tree = function()
+        called = true
+      end
+
+      local ok, err = pcall(vim.api.nvim_cmd, {
+        cmd = 'TaxonTagTree',
+      }, {})
+
+      taxon.show_tag_tree = original_show_tag_tree
+
+      if not ok then
+        error(err)
+      end
+
+      helpers.truthy(called, 'TaxonTagTree did not call require("taxon").show_tag_tree()')
+    end,
+  },
+  {
     name = 'scan_notes rescans the configured notes directory on each call',
     run = function()
       helpers.with_temp_dir(function(temp_dir)
@@ -418,6 +443,92 @@ return {
           message = 'Taxon: tag search requires Telescope (nvim-telescope/telescope.nvim)',
         },
       }, notifications)
+    end,
+  },
+  {
+    name = 'show_tag_tree scans notes and opens the view with the deterministic tree model',
+    run = function()
+      helpers.with_temp_dir(function(temp_dir)
+        local notes_dir = vim.fs.joinpath(temp_dir, 'notes')
+        local path = vim.fs.joinpath(notes_dir, '20260402-010203-cat.md')
+
+        taxon.setup({
+          notes_dir = notes_dir,
+        })
+
+        vim.fn.writefile({
+          '---',
+          'tags: [animal/mammal/cat]',
+          '---',
+          '',
+          '# Cat Note',
+        }, path)
+
+        local captured_tree
+        local result = taxon.show_tag_tree({
+          show = function(tree, _)
+            captured_tree = tree
+            return true
+          end,
+        })
+
+        helpers.eq(true, result)
+        helpers.eq({
+          {
+            children = {
+              {
+                children = {
+                  {
+                    children = {},
+                    name = 'cat',
+                    notes = {
+                      {
+                        explicit_tags = { 'animal/mammal/cat' },
+                        path = path,
+                        tags = {
+                          'animal',
+                          'animal/mammal',
+                          'animal/mammal/cat',
+                        },
+                        title = 'Cat Note',
+                      },
+                    },
+                    tag = 'animal/mammal/cat',
+                  },
+                },
+                name = 'mammal',
+                notes = {
+                  {
+                    explicit_tags = { 'animal/mammal/cat' },
+                    path = path,
+                    tags = {
+                      'animal',
+                      'animal/mammal',
+                      'animal/mammal/cat',
+                    },
+                    title = 'Cat Note',
+                  },
+                },
+                tag = 'animal/mammal',
+              },
+            },
+            name = 'animal',
+            notes = {
+              {
+                explicit_tags = { 'animal/mammal/cat' },
+                path = path,
+                tags = {
+                  'animal',
+                  'animal/mammal',
+                  'animal/mammal/cat',
+                },
+                title = 'Cat Note',
+              },
+            },
+            tag = 'animal',
+          },
+        }, captured_tree)
+      end)
     end,
   },
 }
