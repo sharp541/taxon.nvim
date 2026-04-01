@@ -8,8 +8,8 @@ only by folders.
 
 The repository now includes note parsing, tag normalization, timestamped
 new-note creation, on-demand note scanning with inherited parent-tag expansion,
-and Telescope search by title and tag. The remaining MVP definition lives in
-[`docs/spec.md`](docs/spec.md).
+a hierarchical in-memory tag-tree model, and Telescope search by title and tag.
+The remaining MVP definition lives in [`docs/spec.md`](docs/spec.md).
 
 ## Docs
 
@@ -69,10 +69,11 @@ require("taxon").search_tags()
 ```
 
 `scan_notes()` rescans `notes_dir` on each call and returns a query model with
-`notes`, `tags`, `notes_by_title`, `notes_by_tag`, and `invalid_notes`.
-Per-note `tags` include both explicit frontmatter tags and inherited parent
-tags. Invalid Markdown notes are skipped deterministically and reported through
-`invalid_notes`.
+`notes`, `tags`, `tag_tree`, `notes_by_title`, `notes_by_tag`, and
+`invalid_notes`. `tag_tree` is a deterministic list of root nodes; each node
+contains `name`, `tag`, `notes`, and `children`. Per-note `tags` include both
+explicit frontmatter tags and inherited parent tags. Invalid Markdown notes are
+skipped deterministically and reported through `invalid_notes`.
 
 `search_titles()` uses the same scan model to populate a Telescope picker from
 note titles and opens the selected note path.

@@ -26,6 +26,103 @@ return {
     end,
   },
   {
+    name = 'build_tag_tree nests slash-delimited tags with deterministic note membership',
+    run = function()
+      local bird_note = {
+        path = '/tmp/20260402-010203-bird.md',
+        title = 'Bird Note',
+      }
+      local cat_note = {
+        path = '/tmp/20260402-020304-cat.md',
+        title = 'Cat Note',
+      }
+
+      local tree = query.build_tag_tree({
+        tags = {
+          'project/client a',
+          'animal/mammal/cat',
+          'animal/bird',
+        },
+        notes_by_tag = {
+          animal = {
+            cat_note,
+            bird_note,
+          },
+          ['animal/bird'] = {
+            bird_note,
+          },
+          ['animal/mammal'] = {
+            cat_note,
+          },
+          ['animal/mammal/cat'] = {
+            cat_note,
+          },
+          project = {
+            cat_note,
+          },
+          ['project/client a'] = {
+            cat_note,
+          },
+        },
+      })
+
+      helpers.eq({
+        {
+          children = {
+            {
+              children = {},
+              name = 'bird',
+              notes = {
+                bird_note,
+              },
+              tag = 'animal/bird',
+            },
+            {
+              children = {
+                {
+                  children = {},
+                  name = 'cat',
+                  notes = {
+                    cat_note,
+                  },
+                  tag = 'animal/mammal/cat',
+                },
+              },
+              name = 'mammal',
+              notes = {
+                cat_note,
+              },
+              tag = 'animal/mammal',
+            },
+          },
+          name = 'animal',
+          notes = {
+            bird_note,
+            cat_note,
+          },
+          tag = 'animal',
+        },
+        {
+          children = {
+            {
+              children = {},
+              name = 'client a',
+              notes = {
+                cat_note,
+              },
+              tag = 'project/client a',
+            },
+          },
+          name = 'project',
+          notes = {
+            cat_note,
+          },
+          tag = 'project',
+        },
+      }, tree)
+    end,
+  },
+  {
     name = 'scan_dir builds note, title, and tag indexes from markdown notes',
     run = function()
       helpers.with_temp_dir(function(temp_dir)
@@ -84,6 +181,60 @@ return {
           'project',
           'project/client a',
         }, model.tags)
+        helpers.eq({
+          {
+            children = {
+              {
+                children = {},
+                name = 'bird',
+                notes = {
+                  bird_note,
+                },
+                tag = 'animal/bird',
+              },
+              {
+                children = {
+                  {
+                    children = {},
+                    name = 'cat',
+                    notes = {
+                      cat_note,
+                    },
+                    tag = 'animal/mammal/cat',
+                  },
+                },
+                name = 'mammal',
+                notes = {
+                  cat_note,
+                },
+                tag = 'animal/mammal',
+              },
+            },
+            name = 'animal',
+            notes = {
+              bird_note,
+              cat_note,
+            },
+            tag = 'animal',
+          },
+          {
+            children = {
+              {
+                children = {},
+                name = 'client a',
+                notes = {
+                  cat_note,
+                },
+                tag = 'project/client a',
+              },
+            },
+            name = 'project',
+            notes = {
+              cat_note,
+            },
+            tag = 'project',
+          },
+        }, model.tag_tree)
         helpers.eq({}, model.invalid_notes)
         helpers.eq({
           cat_note,
@@ -139,6 +290,35 @@ return {
             title = 'Valid Note',
           },
         }, model.notes)
+        helpers.eq({
+          {
+            children = {
+              {
+                children = {},
+                name = 'client a',
+                notes = {
+                  {
+                    explicit_tags = { 'project/client a' },
+                    path = valid_path,
+                    tags = { 'project', 'project/client a' },
+                    title = 'Valid Note',
+                  },
+                },
+                tag = 'project/client a',
+              },
+            },
+            name = 'project',
+            notes = {
+              {
+                explicit_tags = { 'project/client a' },
+                path = valid_path,
+                tags = { 'project', 'project/client a' },
+                title = 'Valid Note',
+              },
+            },
+            tag = 'project',
+          },
+        }, model.tag_tree)
         helpers.eq({
           {
             error = 'invalid-tags',

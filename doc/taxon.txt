@@ -26,12 +26,15 @@ LUA API                                                    *taxon-lua-api*
 
 require('taxon').scan_notes()                           *taxon-scan_notes*
     Rescan |taxon-notes_dir| and return a query model with `notes`, `tags`,
-    `notes_by_title`, `notes_by_tag`, and `invalid_notes`.
+    `tag_tree`, `notes_by_title`, `notes_by_tag`, and `invalid_notes`.
 
     Each note entry includes `path`, `title`, `explicit_tags`, and `tags`.
     The `tags` field contains both explicit frontmatter tags and inherited
     parent tags. Invalid Markdown notes are skipped deterministically and
     reported through `invalid_notes`.
+
+    `tag_tree` is a deterministic list of root tag nodes. Each node includes
+    `name`, `tag`, `notes`, and `children`.
 
 require('taxon').search_titles()                     *taxon-search_titles*
     Rescan |taxon-notes_dir|, feed note titles into a Telescope picker, and

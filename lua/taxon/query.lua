@@ -7,6 +7,7 @@ local function new_model()
   return {
     notes = {},
     tags = {},
+    tag_tree = {},
     notes_by_title = {},
     notes_by_tag = {},
     invalid_notes = {},
@@ -42,6 +43,22 @@ local function add_index_entry(index, key, value)
   end
 
   table.insert(entries, value)
+end
+
+local function copy_and_sort_notes(notes)
+  local copy = copy_list(notes or {})
+  sort_notes(copy)
+  return copy
+end
+
+local function sort_tag_tree(nodes)
+  table.sort(nodes, function(left, right)
+    return left.tag < right.tag
+  end)
+
+  for _, node in ipairs(nodes) do
+    sort_tag_tree(node.children)
+  end
 end
 
 local function list_note_paths(notes_dir)
@@ -111,6 +128,52 @@ function M.derive_tags(explicit_tags)
   return derived_tags
 end
 
+function M.build_tag_tree(model)
+  vim.validate({
+    model = { model, 'table' },
+  })
+
+  local tags = model.tags or {}
+  local notes_by_tag = model.notes_by_tag or {}
+  local roots = {}
+  local nodes_by_tag = {}
+
+  for _, current_tag in ipairs(tags) do
+    local segments = vim.split(current_tag, '/', {
+      plain = true,
+      trimempty = false,
+    })
+    local parent_children = roots
+    local path = nil
+
+    for _, segment in ipairs(segments) do
+      if path == nil then
+        path = segment
+      else
+        path = path .. '/' .. segment
+      end
+
+      local node = nodes_by_tag[path]
+      if node == nil then
+        node = {
+          children = {},
+          name = segment,
+          notes = copy_and_sort_notes(notes_by_tag[path]),
+          tag = path,
+        }
+        nodes_by_tag[path] = node
+        table.insert(parent_children, node)
+      end
+
+      parent_children = node.children
+    end
+  end
+
+  sort_tag_tree(roots)
+
+  return roots
+end
+
 function M.scan_dir(notes_dir)
   vim.validate({
     notes_dir = { notes_dir, 'string' },
@@ -165,6 +228,8 @@ function M.scan_dir(notes_dir)
   for _, notes in pairs(model.notes_by_tag) do
     sort_notes(notes)
   end
+
+  model.tag_tree = M.build_tag_tree(model)
 
   return model
 end

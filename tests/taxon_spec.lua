@@ -171,6 +171,7 @@ return {
 
         helpers.eq({}, initial.notes)
         helpers.eq({}, initial.tags)
+        helpers.eq({}, initial.tag_tree)
         helpers.eq({}, initial.invalid_notes)
 
         local path = vim.fs.joinpath(notes_dir, '20260402-010203-note.md')
@@ -196,6 +197,61 @@ return {
             title = 'Rescanned Note',
           },
         }, rescanned.notes)
+        helpers.eq({
+          {
+            children = {
+              {
+                children = {
+                  {
+                    children = {},
+                    name = 'cat',
+                    notes = {
+                      {
+                        explicit_tags = { 'animal/mammal/cat' },
+                        path = path,
+                        tags = {
+                          'animal',
+                          'animal/mammal',
+                          'animal/mammal/cat',
+                        },
+                        title = 'Rescanned Note',
+                      },
+                    },
+                    tag = 'animal/mammal/cat',
+                  },
+                },
+                name = 'mammal',
+                notes = {
+                  {
+                    explicit_tags = { 'animal/mammal/cat' },
+                    path = path,
+                    tags = {
+                      'animal',
+                      'animal/mammal',
+                      'animal/mammal/cat',
+                    },
+                    title = 'Rescanned Note',
+                  },
+                },
+                tag = 'animal/mammal',
+              },
+            },
+            name = 'animal',
+            notes = {
+              {
+                explicit_tags = { 'animal/mammal/cat' },
+                path = path,
+                tags = {
+                  'animal',
+                  'animal/mammal',
+                  'animal/mammal/cat',
+                },
+                title = 'Rescanned Note',
+              },
+            },
+            tag = 'animal',
+          },
+        }, rescanned.tag_tree)
       end)
     end,
   },
