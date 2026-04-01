@@ -5,3 +5,9 @@
 *.swo
 tags
 doc/tags
+
+# Local agent metadata
+.codex
+.claude/
+.cursor/
+.aider*

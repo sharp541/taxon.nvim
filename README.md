@@ -4,22 +4,16 @@
 The name comes from taxonomy: notes are organized by classification rather than
 only by folders.
 
-## Goals
-
-- Model note relationships through tag hierarchies
-- Keep note authoring inside Neovim
-- Provide fast navigation and filtering across related notes
-
 ## Status
 
-This repository currently contains the initial plugin scaffold.
+The repository is at the initial scaffold stage. The current product definition
+for the first usable version lives in [`docs/spec.md`](docs/spec.md).
 
-## Planned features
+## Docs
 
-- Tag declaration and parent/child relationships
-- Note creation with structured frontmatter
-- Search and browse commands based on taxonomy
-- Tree and backlink style navigation
+- Specification: [`docs/spec.md`](docs/spec.md)
+- Architecture decisions: [`docs/adr/`](docs/adr/)
+- Neovim help: [`doc/taxon.txt`](doc/taxon.txt)
 
 ## Installation
 
@@ -40,7 +34,7 @@ require("taxon").setup({
 })
 ```
 
-Then run:
+Current command:
 
 ```vim
 :TaxonOpen
@@ -48,6 +42,6 @@ Then run:
 
 ## Development
 
-- Plugin entrypoint: `plugin/taxon.lua`
-- Lua module: `lua/taxon/init.lua`
-- Help file: `doc/taxon.txt`
+- Format: `stylua lua plugin`
+- Runtime entrypoint: `plugin/taxon.lua`
+- Core module: `lua/taxon/init.lua`
