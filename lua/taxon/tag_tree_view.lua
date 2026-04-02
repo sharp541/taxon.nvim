@@ -377,7 +377,7 @@ function M.open_window(bufnr, opts)
 
   opts = opts or {}
 
-  vim.cmd(opts.window_command or 'botright vnew')
+  vim.cmd(opts.window_command or 'topleft vnew')
 
   local win = vim.api.nvim_get_current_win()
   local width = opts.width or math.max(30, math.floor(vim.o.columns * 0.3))

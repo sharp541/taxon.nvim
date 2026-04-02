@@ -79,9 +79,9 @@ Commands:
   directly for title matches, and opens a second picker with matching notes for
   tag matches.
 - `:TaxonTagTree` rescans `notes_dir` and opens a dedicated vertical tree
-  buffer that treats tags like folders and notes like files. Press `<CR>` or
-  `l` to expand a tag or open a note, `h` to collapse or move to the parent
-  tag, and `q` to close the tree.
+  buffer on the left that treats tags like folders and notes like files.
+  Press `<CR>` or `l` to expand a tag or open a note, `h` to collapse or move
+  to the parent tag, and `q` to close the tree.
 
 The search command requires Telescope. The new-note, scan, and tag-tree
 commands do not.

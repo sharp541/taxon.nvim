@@ -29,7 +29,7 @@ COMMANDS                                                  *taxon-commands*
     If Telescope is unavailable, Taxon shows a clear error message.
 
 :TaxonTagTree                                                *:TaxonTagTree*
-    Open the hierarchical tag tree in a dedicated vertical buffer.
+    Open the hierarchical tag tree in a dedicated vertical buffer on the left.
     Tags behave like folders and notes behave like files.
     Press <CR> or `l` to expand a tag or open a note, `h` to collapse the
     current tag or move to its parent, and `q` to close the tree view.

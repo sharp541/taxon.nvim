@@ -261,6 +261,19 @@ return {
     end,
   },
   {
+    name = 'open_window opens the tag tree to the left of the existing window by default',
+    run = function()
+      local original_win = vim.api.nvim_get_current_win()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local win = tag_tree_view.open_window(bufnr)
+      local layout = vim.fn.winlayout()
+
+      helpers.eq('row', layout[1])
+      helpers.eq({ 'leaf', win }, layout[2][1])
+      helpers.eq({ 'leaf', original_win }, layout[2][2])
+    end,
+  },
+  {
     name = 'open toggles tags and opens files from the current cursor line',
     run = function()
       local opened_path
