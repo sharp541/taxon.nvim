@@ -7,9 +7,8 @@ local default_config = {
 M.config = vim.deepcopy(default_config)
 M.note = require('taxon.note')
 M.query = require('taxon.query')
-M.tag_search = require('taxon.tag_search')
+M.search_picker = require('taxon.search')
 M.tag_tree_view = require('taxon.tag_tree_view')
-M.title_search = require('taxon.title_search')
 
 local function ensure_notes_dir(path)
   local stat = vim.uv.fs_stat(path)
@@ -60,18 +59,14 @@ end
 
 local function notify_search_error(kind, err)
   local messages = {
-    tag = {
-      ['missing-telescope'] = 'Taxon: tag search requires Telescope (nvim-telescope/telescope.nvim)',
-    },
-    title = {
-      ['missing-telescope'] = 'Taxon: title search requires Telescope (nvim-telescope/telescope.nvim)',
+    search = {
+      ['missing-telescope'] = 'Taxon: search requires Telescope (nvim-telescope/telescope.nvim)',
     },
     tree = {},
   }
   local action = ({
-    tag = 'search tags',
+    search = 'search notes and tags',
     tree = 'open the tag tree',
-    title = 'search titles',
   })[kind] or 'complete the search'
 
   vim.notify(
@@ -83,11 +78,6 @@ end
 function M.setup(opts)
   M.config = vim.tbl_deep_extend('force', vim.deepcopy(default_config), opts or {})
   ensure_notes_dir(M.config.notes_dir)
-end
-
-function M.open()
-  ensure_notes_dir(M.config.notes_dir)
-  edit_path(M.config.notes_dir)
 end
 
 function M.create_note(title, opts)
@@ -148,7 +138,7 @@ function M.new_note()
   end)
 end
 
-function M.search_titles(opts)
+function M.search(opts)
   vim.validate({
     opts = { opts, 'table', true },
   })
@@ -157,64 +147,44 @@ function M.search_titles(opts)
 
   local model, err = M.scan_notes()
   if model == nil then
-    notify_search_error('title', err)
+    notify_search_error('search', err)
     return nil, err
   end
 
-  local entries = M.title_search.build_entries(model.notes)
-  local pick = opts.pick or M.title_search.pick
+  local open = opts.open or edit_path
+  local entries = M.search_picker.build_entries(model)
+  local pick = opts.pick or M.search_picker.pick
+  local pick_notes = opts.pick_notes or M.search_picker.pick
   local ok
 
   ok, err = pick(entries, {
-    open = opts.open or edit_path,
-    prompt_title = opts.prompt_title,
-    telescope = opts.telescope,
-  })
-
-  if ok == nil then
-    notify_search_error('title', err)
-    return nil, err
-  end
-
-  return true
-end
-
-function M.search_tags(opts)
-  vim.validate({
-    opts = { opts, 'table', true },
-  })
-
-  opts = opts or {}
-
-  local model, err = M.scan_notes()
-  if model == nil then
-    notify_search_error('tag', err)
-    return nil, err
-  end
-
-  local tag_entries = M.tag_search.build_entries(model.tags)
-  local pick_tag = opts.pick_tag or M.tag_search.pick
-  local pick_notes = opts.pick_notes or M.title_search.pick
-  local open = opts.open or edit_path
-  local ok
-
-  ok, err = pick_tag(tag_entries, {
     on_select = function(selection)
-      local notes, find_err = M.query.find_by_tag(model, selection.tag)
-      if notes == nil then
-        notify_search_error('tag', find_err)
+      if selection.kind == 'note' then
+        M.search_picker.open_entry(selection, {
+          open = open,
+        })
         return
       end
 
-      local note_entries = M.title_search.build_entries(notes)
+      if selection.kind ~= 'tag' then
+        return
+      end
+
+      local notes, find_err = M.query.find_by_tag(model, selection.tag)
+      if notes == nil then
+        notify_search_error('search', find_err)
+        return
+      end
+
+      local note_entries = M.search_picker.build_note_entries(notes)
       local note_ok, note_err = pick_notes(note_entries, {
         open = open,
-        prompt_title = opts.results_prompt_title or ('Taxon Tag Search: ' .. selection.tag),
+        prompt_title = opts.results_prompt_title or ('Taxon Search: ' .. selection.tag),
         telescope = opts.telescope,
       })
 
       if note_ok == nil then
-        notify_search_error('tag', note_err)
+        notify_search_error('search', note_err)
       end
     end,
     prompt_title = opts.prompt_title,
@@ -222,7 +192,7 @@ function M.search_tags(opts)
   })
 
   if ok == nil then
-    notify_search_error('tag', err)
+    notify_search_error('search', err)
     return nil, err
   end
 
@@ -247,12 +217,11 @@ function M.show_tag_tree(opts)
 
   ok, err = show(model.tag_tree, {
     empty_message = opts.empty_message,
+    expanded_tags = opts.expanded_tags,
     indent = opts.indent,
     keep_focus = opts.keep_focus,
-    note_prompt_title = opts.note_prompt_title,
     open = opts.open or edit_path,
     open_window = opts.open_window,
-    select_note = opts.select_note,
     source_win = opts.source_win,
     width = opts.width,
     window_command = opts.window_command,

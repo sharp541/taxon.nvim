@@ -266,3 +266,4 @@ Append one line at the end of each working session.
 | 2026-04-02 | TAXON-MVP-07 | done | working tree | Added deterministic `tag_tree` nodes with per-tag note membership to the scan model, plus docs and tests for hierarchy shape |
 | 2026-04-02 | TAXON-MVP-08 | done | working tree | Added `:TaxonTagTree` and `show_tag_tree()` with a dedicated scratch tree view, note opening from selected tags, docs, and headless tests |
 | 2026-04-02 | TAXON-MVP-09 | done | working tree | Finalized MVP command/docs coverage, added help-text and prompt tests, and verified the full suite passes |
+| 2026-04-02 | TAXON-MVP-09 | done | working tree | Replaced separate title/tag commands with unified `:TaxonSearch`, removed `:TaxonOpen`, and updated docs/tests for the aggregated search flow |

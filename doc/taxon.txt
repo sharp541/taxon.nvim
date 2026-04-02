@@ -10,35 +10,29 @@ Taxon stores one Markdown note per file in |taxon-notes_dir|. Query commands
 rescan the directory on each invocation, derive parent tags in memory, and do
 not write a cache or index file in the MVP.
 
-|:TaxonTitleSearch| and |:TaxonTagSearch| require
-`nvim-telescope/telescope.nvim`. The rest of the MVP command surface does not.
+|:TaxonSearch| requires `nvim-telescope/telescope.nvim`. The rest of the MVP
+command surface does not.
 
 ==============================================================================
 COMMANDS                                                  *taxon-commands*
-
-:TaxonOpen                                                      *:TaxonOpen*
-    Create |taxon-notes_dir| if needed and open the configured notes
-    directory.
 
 :TaxonNew                                                        *:TaxonNew*
     Prompt for a title, create a new note in |taxon-notes_dir|, and open it.
     Titles are preserved in the timestamped filename unless they contain
     filename-unsafe characters such as `/` or `\`.
 
-:TaxonTitleSearch                                        *:TaxonTitleSearch*
-    Rescan |taxon-notes_dir|, search note titles with Telescope, and open the
-    selected note.
-    If Telescope is unavailable, Taxon shows a clear error message.
-
-:TaxonTagSearch                                            *:TaxonTagSearch*
-    Rescan |taxon-notes_dir|, search normalized explicit and inherited tags
-    with Telescope, then choose and open a matching note.
+:TaxonSearch                                                  *:TaxonSearch*
+    Rescan |taxon-notes_dir|, search note titles and normalized explicit and
+    inherited tags from a single Telescope picker, and open the selected note
+    directly for title matches.
+    Selecting a tag opens a second picker with the matching notes.
     If Telescope is unavailable, Taxon shows a clear error message.
 
 :TaxonTagTree                                                *:TaxonTagTree*
     Open the hierarchical tag tree in a dedicated vertical buffer.
-    Press <CR> on a tag to open one of its matching notes, or `q` to close
-    the tree view.
+    Tags behave like folders and notes behave like files.
+    Press <CR> or `l` to expand a tag or open a note, `h` to collapse the
+    current tag or move to its parent, and `q` to close the tree view.
 
 ==============================================================================
 LUA API                                                    *taxon-lua-api*
@@ -50,10 +44,6 @@ require('taxon').setup({ opts })                           *taxon-setup*
 >
         vim.fn.stdpath('data') .. '/taxon-notes'
 <
-
-require('taxon').open()                                     *taxon-open*
-    Create |taxon-notes_dir| if needed and open the configured notes
-    directory.
 
 require('taxon').create_note(title)                   *taxon-create_note*
     Create a new note directly and return its full path.
@@ -77,17 +67,12 @@ require('taxon').scan_notes()                           *taxon-scan_notes*
     `tag_tree` is a deterministic list of root tag nodes. Each node includes
     `name`, `tag`, `notes`, and `children`.
 
-require('taxon').search_titles()                     *taxon-search_titles*
-    Rescan |taxon-notes_dir|, feed note titles into a Telescope picker, and
-    open the selected note.
+require('taxon').search()                               *taxon-search*
+    Rescan |taxon-notes_dir|, feed note titles and normalized explicit and
+    inherited tags into a single Telescope picker, and open the selected note
+    directly for title matches.
 
-    If Telescope is unavailable, Taxon shows a clear error message instead of
-    raising a raw Lua stack trace.
-
-require('taxon').search_tags()                         *taxon-search_tags*
-    Rescan |taxon-notes_dir|, feed normalized explicit and inherited tags into
-    a Telescope picker, then show the notes that match the selected tag and
-    open the selected note.
+    Selecting a tag opens a second picker with the matching notes.
 
     If Telescope is unavailable, Taxon shows a clear error message instead of
     raising a raw Lua stack trace.
@@ -96,9 +81,12 @@ require('taxon').show_tag_tree()                     *taxon-show_tag_tree*
     Rescan |taxon-notes_dir| and render the deterministic tag hierarchy in a
     dedicated vertical buffer.
 
-    Press <CR> on a tag to open its only matching note directly, or choose
-    from the matching notes when the tag contains more than one note. Press
-    `q` to close the tree buffer.
+    Tags behave like expandable folders and notes are rendered as file
+    entries beneath their explicit tags only. Inherited parent tags remain
+    visible as folders but do not list inherited notes directly.
+
+    Press <CR> or `l` to expand a tag or open a note, `h` to collapse the
+    current tag or move to its parent, and `q` to close the tree buffer.
 
 ==============================================================================
 NOTE FORMAT                                            *taxon-note-format*

@@ -1,11 +1,11 @@
 local helpers = dofile('tests/helpers.lua')
-local title_search = require('taxon.title_search')
+local search = require('taxon.search')
 
 return {
   {
-    name = 'build_entries returns Telescope-friendly title entries',
+    name = 'build_note_entries returns Telescope-friendly note entries',
     run = function()
-      local entries = title_search.build_entries({
+      local entries = search.build_note_entries({
         {
           path = '/tmp/20260402-010203-alpha.md',
           title = 'Alpha',
@@ -19,15 +19,73 @@ return {
       helpers.eq({
         {
           display = 'Alpha [20260402-010203-alpha.md]',
+          kind = 'note',
           ordinal = 'Alpha 20260402-010203-alpha.md /tmp/20260402-010203-alpha.md',
           path = '/tmp/20260402-010203-alpha.md',
           title = 'Alpha',
         },
         {
           display = 'Beta [20260402-020304-beta.md]',
+          kind = 'note',
           ordinal = 'Beta 20260402-020304-beta.md /tmp/20260402-020304-beta.md',
           path = '/tmp/20260402-020304-beta.md',
           title = 'Beta',
+        },
+      }, entries)
+    end,
+  },
+  {
+    name = 'build_tag_entries returns Telescope-friendly tag entries',
+    run = function()
+      local entries = search.build_tag_entries({
+        'animal',
+        'animal/mammal/cat',
+      })
+
+      helpers.eq({
+        {
+          display = 'animal',
+          kind = 'tag',
+          ordinal = 'animal animal',
+          tag = 'animal',
+        },
+        {
+          display = 'animal/mammal/cat',
+          kind = 'tag',
+          ordinal = 'animal/mammal/cat animal / mammal / cat',
+          tag = 'animal/mammal/cat',
+        },
+      }, entries)
+    end,
+  },
+  {
+    name = 'build_entries combines note and tag entries with kind labels',
+    run = function()
+      local entries = search.build_entries({
+        notes = {
+          {
+            path = '/tmp/20260402-010203-alpha.md',
+            title = 'Alpha',
+          },
+        },
+        tags = {
+          'animal',
+        },
+      })
+
+      helpers.eq({
+        {
+          display = '[Title] Alpha [20260402-010203-alpha.md]',
+          kind = 'note',
+          ordinal = 'title Alpha 20260402-010203-alpha.md /tmp/20260402-010203-alpha.md',
+          path = '/tmp/20260402-010203-alpha.md',
+          title = 'Alpha',
+        },
+        {
+          display = '[Tag] animal',
+          kind = 'tag',
+          ordinal = 'tag animal animal',
+          tag = 'animal',
         },
       }, entries)
     end,
@@ -37,7 +95,7 @@ return {
     run = function()
       local opened_path
 
-      title_search.open_entry({
+      search.open_entry({
         path = '/tmp/20260402-010203-alpha.md',
         title = 'Alpha',
       }, {
@@ -50,34 +108,34 @@ return {
     end,
   },
   {
-    name = 'pick opens the selected Telescope entry through the opener',
+    name = 'pick forwards the selected Telescope entry to the callback',
     run = function()
       local closed_prompt
       local captured_prompt_title
-      local selected
       local picker_found = false
       local replaced_action
+      local selected_entry
 
-      local ok = title_search.pick({
+      local ok = search.pick({
         {
-          display = 'Alpha [20260402-010203-alpha.md]',
-          ordinal = 'Alpha 20260402-010203-alpha.md /tmp/20260402-010203-alpha.md',
-          path = '/tmp/20260402-010203-alpha.md',
-          title = 'Alpha',
+          display = '[Tag] animal',
+          kind = 'tag',
+          ordinal = 'tag animal animal',
+          tag = 'animal',
         },
       }, {
-        open = function(path)
-          selected = path
+        on_select = function(entry)
+          selected_entry = entry
         end,
         telescope = {
           action_state = {
             get_selected_entry = function()
               return {
                 value = {
-                  display = 'Alpha [20260402-010203-alpha.md]',
-                  ordinal = 'Alpha 20260402-010203-alpha.md /tmp/20260402-010203-alpha.md',
-                  path = '/tmp/20260402-010203-alpha.md',
-                  title = 'Alpha',
+                  display = '[Tag] animal',
+                  kind = 'tag',
+                  ordinal = 'tag animal animal',
+                  tag = 'animal',
                 },
               }
             end,
@@ -123,8 +181,13 @@ return {
       helpers.eq(true, ok)
       helpers.truthy(picker_found, 'picker was not started')
       helpers.eq(42, closed_prompt)
-      helpers.eq('Taxon Title Search', captured_prompt_title)
-      helpers.eq('/tmp/20260402-010203-alpha.md', selected)
+      helpers.eq('Taxon Search', captured_prompt_title)
+      helpers.eq({
+        display = '[Tag] animal',
+        kind = 'tag',
+        ordinal = 'tag animal animal',
+        tag = 'animal',
+      }, selected_entry)
     end,
   },
 }

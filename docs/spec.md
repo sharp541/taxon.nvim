@@ -83,8 +83,7 @@ Examples:
 ## MVP UI
 
 - Create a new note from a command
-- Search by title with Telescope
-- Search by tag with Telescope
+- Search note titles and tags from a single Telescope picker
 - Show tags in a single tree view
 - Open matching notes from the tree view
 

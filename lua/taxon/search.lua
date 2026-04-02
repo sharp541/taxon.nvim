@@ -31,23 +31,88 @@ local function resolve_telescope(telescope)
   }
 end
 
-function M.build_entries(notes)
+function M.build_note_entries(notes, opts)
   vim.validate({
     notes = { notes, 'table' },
+    opts = { opts, 'table', true },
   })
 
+  opts = opts or {}
+
   local entries = {}
+  local prefix_kind = opts.prefix_kind == true
 
   for _, note in ipairs(notes) do
     local filename = vim.fs.basename(note.path)
+    local display = string.format('%s [%s]', note.title, filename)
+    local ordinal = string.format('%s %s %s', note.title, filename, note.path)
+
+    if prefix_kind then
+      display = '[Title] ' .. display
+      ordinal = 'title ' .. ordinal
+    end
 
     table.insert(entries, {
-      display = string.format('%s [%s]', note.title, filename),
-      ordinal = string.format('%s %s %s', note.title, filename, note.path),
+      display = display,
+      kind = 'note',
+      ordinal = ordinal,
       path = note.path,
       title = note.title,
     })
   end
+
+  return entries
+end
+
+function M.build_tag_entries(tags, opts)
+  vim.validate({
+    tags = { tags, 'table' },
+    opts = { opts, 'table', true },
+  })
+
+  opts = opts or {}
+
+  local entries = {}
+  local prefix_kind = opts.prefix_kind == true
+
+  for _, current_tag in ipairs(tags) do
+    local spaced_tag = current_tag:gsub('/', ' / ')
+    local display = current_tag
+    local ordinal = string.format('%s %s', current_tag, spaced_tag)
+
+    if prefix_kind then
+      display = '[Tag] ' .. display
+      ordinal = 'tag ' .. ordinal
+    end
+
+    table.insert(entries, {
+      display = display,
+      kind = 'tag',
+      ordinal = ordinal,
+      tag = current_tag,
+    })
+  end
+
+  return entries
+end
+
+function M.build_entries(model)
+  vim.validate({
+    model = { model, 'table' },
+    ['model.notes'] = { model.notes, 'table' },
+    ['model.tags'] = { model.tags, 'table' },
+  })
+
+  local entries = M.build_note_entries(model.notes, {
+    prefix_kind = true,
+  })
+
+  vim.list_extend(
+    entries,
+    M.build_tag_entries(model.tags, {
+      prefix_kind = true,
+    })
+  )
 
   return entries
 end
@@ -59,8 +124,8 @@ function M.open_entry(entry, opts)
   })
 
   opts = opts or {}
-  local open = opts.open or default_open
 
+  local open = opts.open or default_open
   return open(entry.path)
 end
 
@@ -83,14 +148,13 @@ function M.pick(entries, opts)
       return {
         display = entry.display,
         ordinal = entry.ordinal,
-        path = entry.path,
         value = entry,
       }
     end,
   })
 
   local picker = telescope.pickers.new({}, {
-    prompt_title = opts.prompt_title or 'Taxon Title Search',
+    prompt_title = opts.prompt_title or 'Taxon Search',
     finder = finder,
     sorter = telescope.config.values.generic_sorter({}),
     attach_mappings = function(prompt_bufnr)
@@ -103,9 +167,16 @@ function M.pick(entries, opts)
           return
         end
 
-        M.open_entry(selection.value, {
-          open = opts.open,
-        })
+        if opts.on_select ~= nil then
+          opts.on_select(selection.value)
+          return
+        end
+
+        if selection.value.path ~= nil then
+          M.open_entry(selection.value, {
+            open = opts.open,
+          })
+        end
       end)
 
       return true
