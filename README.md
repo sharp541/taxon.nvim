@@ -24,7 +24,7 @@ Using `lazy.nvim`:
 
 ```lua
 {
-  "yourname/taxon.nvim",
+  "sharp541/taxon.nvim",
   dependencies = {
     "nvim-telescope/telescope.nvim", -- required for :TaxonSearch
   },
@@ -137,3 +137,7 @@ New notes use timestamp-prefixed filenames in the form
 - Test: `./scripts/test`
 - Runtime entrypoint: `plugin/taxon.lua`
 - Core module: `lua/taxon/init.lua`
+
+## License
+
+[MIT](LICENSE)
