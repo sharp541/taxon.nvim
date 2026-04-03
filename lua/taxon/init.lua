@@ -27,16 +27,15 @@ local function edit_path(path)
 end
 
 local function write_note(path, content)
-  local ok = pcall(
-    vim.fn.writefile,
-    vim.split(content, '\n', {
-      plain = true,
-      trimempty = true,
-    }),
-    path
-  )
+  local fd = vim.uv.fs_open(path, 'w', 420)
+  if fd == nil then
+    return nil, 'write-failed'
+  end
 
-  if not ok then
+  local write_ok, write_result = pcall(vim.uv.fs_write, fd, content, 0)
+  local close_ok = pcall(vim.uv.fs_close, fd)
+
+  if not write_ok or write_result == nil or not close_ok then
     return nil, 'write-failed'
   end
 
