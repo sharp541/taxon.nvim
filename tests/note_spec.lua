@@ -119,6 +119,69 @@ return {
     end,
   },
   {
+    name = 'write_tags rewrites the frontmatter tags and preserves the body',
+    run = function()
+      helpers.with_temp_dir(function(temp_dir)
+        local path = vim.fs.joinpath(temp_dir, 'note.md')
+
+        vim.fn.writefile({
+          '---',
+          'tags: [zoo/birds]',
+          '---',
+          '',
+          '# Preserve Body',
+          '',
+          'Body line',
+        }, path)
+
+        local ok = note.write_tags(path, { 'Project / Client A', 'zoo/birds' })
+        local lines = vim.fn.readfile(path)
+
+        helpers.eq(true, ok)
+        helpers.eq({
+          '---',
+          'tags:',
+          '  - project/client a',
+          '  - zoo/birds',
+          '---',
+          '',
+          '# Preserve Body',
+          '',
+          'Body line',
+        }, lines)
+      end)
+    end,
+  },
+  {
+    name = 'rename_file renames a note within the same directory',
+    run = function()
+      helpers.with_temp_dir(function(temp_dir)
+        local path = vim.fs.joinpath(temp_dir, 'old.md')
+        vim.fn.writefile({ '# Title' }, path)
+
+        local new_path = note.rename_file(path, 'new.md')
+
+        helpers.eq(vim.fs.joinpath(temp_dir, 'new.md'), new_path)
+        helpers.truthy(vim.uv.fs_stat(new_path) ~= nil, 'renamed note should exist')
+        helpers.eq(nil, vim.uv.fs_stat(path))
+      end)
+    end,
+  },
+  {
+    name = 'delete_file removes an existing note',
+    run = function()
+      helpers.with_temp_dir(function(temp_dir)
+        local path = vim.fs.joinpath(temp_dir, 'delete.md')
+        vim.fn.writefile({ '# Title' }, path)
+
+        local ok = note.delete_file(path)
+
+        helpers.eq(true, ok)
+        helpers.eq(nil, vim.uv.fs_stat(path))
+      end)
+    end,
+  },
+  {
     name = 'parse rejects notes without frontmatter',
     run = function()
       local parsed, err = note.parse('# Missing Frontmatter\n')

@@ -293,6 +293,116 @@ local function parse_lines(lines)
   }
 end
 
+local function parse_document_lines(lines)
+  if #lines == 0 or not lines[1]:match('^%-%-%-%s*$') then
+    return nil, 'missing-frontmatter'
+  end
+
+  local closing_index
+  for index = 2, #lines do
+    if lines[index]:match('^%-%-%-%s*$') then
+      closing_index = index
+      break
+    end
+  end
+
+  if closing_index == nil then
+    return nil, 'unterminated-frontmatter'
+  end
+
+  local frontmatter_lines = {}
+  for index = 2, closing_index - 1 do
+    table.insert(frontmatter_lines, lines[index])
+  end
+
+  local frontmatter, err = parse_frontmatter(frontmatter_lines)
+  if frontmatter == nil then
+    return nil, err
+  end
+
+  local body_lines = {}
+  for index = closing_index + 1, #lines do
+    table.insert(body_lines, lines[index])
+  end
+
+  local title = extract_title(body_lines)
+  if title == nil then
+    return nil, 'missing-title'
+  end
+
+  return {
+    body_lines = body_lines,
+    tags = frontmatter.tags,
+    title = title,
+  }
+end
+
+local function render_tags_frontmatter(tags)
+  if #tags == 0 then
+    return {
+      '---',
+      'tags: []',
+      '---',
+    }
+  end
+
+  local lines = {
+    '---',
+    'tags:',
+  }
+
+  for _, current_tag in ipairs(tags) do
+    table.insert(lines, '  - ' .. current_tag)
+  end
+
+  table.insert(lines, '---')
+
+  return lines
+end
+
+local function read_lines(path)
+  local ok, lines = pcall(vim.fn.readfile, path)
+  if not ok then
+    return nil, 'read-failed'
+  end
+
+  return lines
+end
+
+local function write_lines(path, lines)
+  local ok = pcall(vim.fn.writefile, lines, path)
+  if not ok then
+    return nil, 'write-failed'
+  end
+
+  return true
+end
+
+local function contains_filename_unsafe_characters(value)
+  return value:find('[/\\:*?"<>|]') ~= nil
+end
+
+local function validate_basename(basename)
+  if type(basename) ~= 'string' then
+    return nil, 'invalid-basename'
+  end
+
+  local trimmed = vim.trim(basename)
+  if trimmed == '' or trimmed:find('%c') ~= nil then
+    return nil, 'invalid-basename'
+  end
+
+  if contains_filename_unsafe_characters(trimmed) then
+    return nil, 'unsafe-basename'
+  end
+
+  if not trimmed:lower():match('%.md$') then
+    return nil, 'invalid-extension'
+  end
+
+  return trimmed
+end
+
 function M.parse(content)
   vim.validate({
     content = { content, 'string' },
@@ -311,9 +421,9 @@ function M.read(path)
     path = { path, 'string' },
   })
 
-  local ok, lines = pcall(vim.fn.readfile, path)
-  if not ok then
-    return nil, 'read-failed'
+  local lines, read_err = read_lines(path)
+  if lines == nil then
+    return nil, read_err
   end
 
   local note, err = parse_lines(lines)
@@ -323,6 +433,26 @@ function M.read(path)
 
   note.path = path
   return note
+end
+
+function M.read_document(path)
+  vim.validate({
+    path = { path, 'string' },
+  })
+
+  local lines, read_err = read_lines(path)
+  if lines == nil then
+    return nil, read_err
+  end
+
+  local document, err = parse_document_lines(lines)
+  if document == nil then
+    return nil, err
+  end
+
+  document.path = path
+
+  return document
 end
 
 function M.render(title)
@@ -358,6 +488,77 @@ function M.filename(title, now)
 
   local timestamp = format_timestamp(now or os.date('*t'))
   return string.format('%s-%s.md', timestamp, trimmed_title)
+end
+
+function M.write_tags(path, tags)
+  vim.validate({
+    path = { path, 'string' },
+    tags = { tags, 'table' },
+  })
+
+  local normalized_tags, err = tag.normalize_all(tags)
+  if normalized_tags == nil then
+    return nil, err
+  end
+
+  local document
+  document, err = M.read_document(path)
+  if document == nil then
+    return nil, err
+  end
+
+  local lines = render_tags_frontmatter(normalized_tags)
+  for _, line in ipairs(document.body_lines) do
+    table.insert(lines, line)
+  end
+
+  local ok, write_err = write_lines(path, lines)
+  if ok == nil then
+    return nil, write_err
+  end
+
+  return true
+end
+
+function M.rename_file(path, basename)
+  vim.validate({
+    path = { path, 'string' },
+    basename = { basename, 'string' },
+  })
+
+  local normalized_basename, err = validate_basename(basename)
+  if normalized_basename == nil then
+    return nil, err
+  end
+
+  local target_path = vim.fs.joinpath(vim.fs.dirname(path), normalized_basename)
+  if target_path == path then
+    return path
+  end
+
+  if vim.uv.fs_stat(target_path) ~= nil then
+    return nil, 'path-exists'
+  end
+
+  local ok, rename_err = pcall(vim.uv.fs_rename, path, target_path)
+  if not ok or not rename_err then
+    return nil, 'rename-failed'
+  end
+
+  return target_path
+end
+
+function M.delete_file(path)
+  vim.validate({
+    path = { path, 'string' },
+  })
+
+  local ok, result = pcall(vim.uv.fs_unlink, path)
+  if not ok or not result then
+    return nil, 'delete-failed'
+  end
+
+  return true
 end
 
 return M

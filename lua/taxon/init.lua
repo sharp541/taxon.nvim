@@ -250,12 +250,17 @@ function M.show_tag_tree(opts)
   local ok
 
   ok, err = show(model.tag_tree, {
+    confirm_deletes = opts.confirm_deletes,
     empty_message = opts.empty_message,
     expanded_tags = opts.expanded_tags,
     indent = opts.indent,
     keep_focus = opts.keep_focus,
+    notify = opts.notify,
     open = opts.open,
     open_window = opts.open_window,
+    scan = opts.scan or function()
+      return M.scan_notes()
+    end,
     source_win = opts.source_win,
     width = opts.width,
     window_command = opts.window_command,

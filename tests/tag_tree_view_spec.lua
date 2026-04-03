@@ -1,5 +1,6 @@
 local helpers = dofile('tests/helpers.lua')
 local tag_tree_view = require('taxon.tag_tree_view')
+local query = require('taxon.query')
 
 return {
   {
@@ -195,7 +196,10 @@ return {
 
       helpers.eq(true, ok)
       helpers.eq(#windows_before, #windows_after)
-      helpers.eq('/tmp/20260402-030404-dashboard.md', vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(source_win)))
+      helpers.eq(
+        '/tmp/20260402-030404-dashboard.md',
+        vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(source_win))
+      )
     end,
   },
   {
@@ -230,7 +234,10 @@ return {
       helpers.eq(#windows_before + 1, #windows_after)
       helpers.truthy(edit_win ~= nil, 'expected a new edit window to be created')
       helpers.eq(tree_buf, vim.api.nvim_win_get_buf(tree_win))
-      helpers.eq('/tmp/20260402-030405-dog.md', vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(edit_win)))
+      helpers.eq(
+        '/tmp/20260402-030405-dog.md',
+        vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(edit_win))
+      )
       helpers.eq(tree_win, vim.api.nvim_get_current_win())
 
       vim.api.nvim_set_current_win(edit_win)
@@ -423,6 +430,201 @@ return {
     end,
   },
   {
+    name = 'write renames a tag and updates matching note frontmatter',
+    run = function()
+      helpers.with_temp_dir(function(temp_dir)
+        local path = vim.fs.joinpath(temp_dir, '20260402-010203-cat.md')
+        vim.fn.writefile({
+          '---',
+          'tags:',
+          '  - animal/mammal/cat',
+          '---',
+          '',
+          '# Cat Note',
+        }, path)
+
+        local model = query.scan_dir(temp_dir)
+        local result = tag_tree_view.open(model.tag_tree, {
+          expanded_tags = {
+            ['animal'] = true,
+            ['animal/mammal'] = true,
+            ['animal/mammal/cat'] = true,
+          },
+          open_window = function(bufnr)
+            local win = vim.api.nvim_get_current_win()
+            vim.api.nvim_win_set_buf(win, bufnr)
+            return win
+          end,
+          scan = function()
+            return query.scan_dir(temp_dir)
+          end,
+        })
+
+        vim.api.nvim_buf_set_lines(result.bufnr, 0, -1, false, {
+          '- animal/',
+          '  - mammals/',
+          '    - cat/',
+          '      20260402-010203-cat.md',
+        })
+
+        local ok = tag_tree_view.write(result.bufnr)
+        local parsed = query.scan_dir(temp_dir)
+
+        helpers.truthy(ok ~= nil, 'expected write to succeed')
+        helpers.eq({ 'animal/mammals/cat' }, parsed.notes[1].explicit_tags)
+        helpers.eq({
+          '- animal/',
+          '  - mammals/',
+          '    - cat/',
+          '      20260402-010203-cat.md',
+        }, vim.api.nvim_buf_get_lines(result.bufnr, 0, -1, false))
+      end)
+    end,
+  },
+  {
+    name = 'write rejects deleting tag lines from the tree',
+    run = function()
+      helpers.with_temp_dir(function(temp_dir)
+        local path = vim.fs.joinpath(temp_dir, '20260402-010203-cat.md')
+        vim.fn.writefile({
+          '---',
+          'tags:',
+          '  - animal/mammal/cat',
+          '---',
+          '',
+          '# Cat Note',
+        }, path)
+
+        local model = query.scan_dir(temp_dir)
+        local result = tag_tree_view.open(model.tag_tree, {
+          expanded_tags = {
+            ['animal'] = true,
+            ['animal/mammal'] = true,
+            ['animal/mammal/cat'] = true,
+          },
+          open_window = function(bufnr)
+            local win = vim.api.nvim_get_current_win()
+            vim.api.nvim_win_set_buf(win, bufnr)
+            return win
+          end,
+          scan = function()
+            return query.scan_dir(temp_dir)
+          end,
+        })
+
+        vim.api.nvim_buf_set_lines(result.bufnr, 0, -1, false, {
+          '- animal/',
+          '  - mammal/',
+        })
+
+        local ok, err = tag_tree_view.write(result.bufnr)
+
+        helpers.eq(nil, ok)
+        helpers.eq('tag-delete-not-supported', err)
+        helpers.truthy(vim.uv.fs_stat(path) ~= nil, 'note should remain on disk')
+        vim.cmd('enew!')
+      end)
+    end,
+  },
+  {
+    name = 'write renames a file path without changing the note title',
+    run = function()
+      helpers.with_temp_dir(function(temp_dir)
+        local old_path = vim.fs.joinpath(temp_dir, '20260402-010203-old.md')
+        local new_path = vim.fs.joinpath(temp_dir, '20260402-010203-new.md')
+
+        vim.fn.writefile({
+          '---',
+          'tags:',
+          '  - animal/cat',
+          '---',
+          '',
+          '# Keep Title',
+        }, old_path)
+
+        local model = query.scan_dir(temp_dir)
+        local result = tag_tree_view.open(model.tag_tree, {
+          expanded_tags = {
+            ['animal'] = true,
+            ['animal/cat'] = true,
+          },
+          open_window = function(bufnr)
+            local win = vim.api.nvim_get_current_win()
+            vim.api.nvim_win_set_buf(win, bufnr)
+            return win
+          end,
+          scan = function()
+            return query.scan_dir(temp_dir)
+          end,
+        })
+
+        vim.api.nvim_buf_set_lines(result.bufnr, 0, -1, false, {
+          '- animal/',
+          '  - cat/',
+          '    20260402-010203-new.md',
+        })
+
+        local ok = tag_tree_view.write(result.bufnr)
+        local parsed = query.scan_dir(temp_dir)
+
+        helpers.truthy(ok ~= nil, 'expected write to succeed')
+        helpers.truthy(vim.uv.fs_stat(new_path) ~= nil, 'renamed note should exist')
+        helpers.eq(nil, vim.uv.fs_stat(old_path))
+        helpers.eq('Keep Title', parsed.notes[1].title)
+      end)
+    end,
+  },
+  {
+    name = 'write asks for confirmation before deleting files and respects cancellation',
+    run = function()
+      helpers.with_temp_dir(function(temp_dir)
+        local path = vim.fs.joinpath(temp_dir, '20260402-010203-delete.md')
+        vim.fn.writefile({
+          '---',
+          'tags:',
+          '  - animal/cat',
+          '---',
+          '',
+          '# Delete Me',
+        }, path)
+
+        local asked_paths
+        local model = query.scan_dir(temp_dir)
+        local result = tag_tree_view.open(model.tag_tree, {
+          expanded_tags = {
+            ['animal'] = true,
+            ['animal/cat'] = true,
+          },
+          confirm_deletes = function(paths)
+            asked_paths = vim.deepcopy(paths)
+            return false
+          end,
+          open_window = function(bufnr)
+            local win = vim.api.nvim_get_current_win()
+            vim.api.nvim_win_set_buf(win, bufnr)
+            return win
+          end,
+          scan = function()
+            return query.scan_dir(temp_dir)
+          end,
+        })
+
+        vim.api.nvim_buf_set_lines(result.bufnr, 0, -1, false, {
+          '- animal/',
+          '  - cat/',
+        })
+
+        local ok, err = tag_tree_view.write(result.bufnr)
+
+        helpers.eq(nil, ok)
+        helpers.eq('delete-cancelled', err)
+        helpers.eq({ path }, asked_paths)
+        helpers.truthy(vim.uv.fs_stat(path) ~= nil, 'note should remain after cancellation')
+        vim.cmd('enew!')
+      end)
+    end,
+  },
+  {
     name = 'close removes the dedicated tree window without leaving an extra split behind',
     run = function()
       local original_win = vim.api.nvim_get_current_win()
@@ -443,7 +645,10 @@ return {
       helpers.eq(original_win, vim.api.nvim_get_current_win())
       helpers.eq(edit_buf, vim.api.nvim_win_get_buf(original_win))
       helpers.truthy(not vim.api.nvim_win_is_valid(result.win), 'expected tree window to be closed')
-      helpers.truthy(not vim.api.nvim_buf_is_valid(result.bufnr), 'expected tree buffer to be wiped')
+      helpers.truthy(
+        not vim.api.nvim_buf_is_valid(result.bufnr),
+        'expected tree buffer to be wiped'
+      )
 
       if vim.api.nvim_buf_is_valid(edit_buf) then
         vim.api.nvim_buf_delete(edit_buf, { force = true })
@@ -462,8 +667,14 @@ return {
         vim.api.nvim_feedkeys(vim.keycode(key), 'xt', false)
         vim.cmd('redraw')
 
-        helpers.truthy(not vim.api.nvim_win_is_valid(result.win), 'expected tree window to close for ' .. key)
-        helpers.truthy(not vim.api.nvim_buf_is_valid(result.bufnr), 'expected tree buffer to wipe for ' .. key)
+        helpers.truthy(
+          not vim.api.nvim_win_is_valid(result.win),
+          'expected tree window to close for ' .. key
+        )
+        helpers.truthy(
+          not vim.api.nvim_buf_is_valid(result.bufnr),
+          'expected tree buffer to wipe for ' .. key
+        )
         helpers.eq(original_win, vim.api.nvim_get_current_win())
       end
     end,
