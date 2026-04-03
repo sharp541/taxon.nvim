@@ -10,13 +10,24 @@ M.query = require('taxon.query')
 M.search_picker = require('taxon.search')
 M.tag_tree_view = require('taxon.tag_tree_view')
 
+local function normalize_notes_dir(path)
+  if vim.startswith(path, '~') then
+    return vim.fn.expand(path)
+  end
+
+  return path
+end
+
 local function ensure_notes_dir(path)
+  path = normalize_notes_dir(path)
+
   local stat = vim.uv.fs_stat(path)
   if stat then
-    return
+    return path
   end
 
   vim.fn.mkdir(path, 'p')
+  return path
 end
 
 local function edit_path(path)
@@ -95,7 +106,7 @@ end
 
 function M.setup(opts)
   M.config = vim.tbl_deep_extend('force', vim.deepcopy(default_config), opts or {})
-  ensure_notes_dir(M.config.notes_dir)
+  M.config.notes_dir = ensure_notes_dir(M.config.notes_dir)
 end
 
 function M.create_note(title, opts)
@@ -106,7 +117,7 @@ function M.create_note(title, opts)
 
   opts = opts or {}
 
-  ensure_notes_dir(M.config.notes_dir)
+  M.config.notes_dir = ensure_notes_dir(M.config.notes_dir)
 
   local filename, err = M.note.filename(title, opts.now)
   if filename == nil then
@@ -140,7 +151,7 @@ function M.create_note(title, opts)
 end
 
 function M.scan_notes()
-  ensure_notes_dir(M.config.notes_dir)
+  M.config.notes_dir = ensure_notes_dir(M.config.notes_dir)
   return M.query.scan_dir(M.config.notes_dir)
 end
 

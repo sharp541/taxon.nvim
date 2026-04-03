@@ -21,6 +21,63 @@ return {
     end,
   },
   {
+    name = 'setup expands a leading tilde in notes_dir',
+    run = function()
+      helpers.with_temp_dir(function(temp_dir)
+        local original_home = vim.env.HOME
+        local expected = vim.fs.joinpath(temp_dir, 'notes')
+
+        vim.env.HOME = temp_dir
+
+        local ok, err = xpcall(function()
+          taxon.setup({
+            notes_dir = '~/notes',
+          })
+
+          local stat = vim.uv.fs_stat(expected)
+
+          helpers.truthy(stat ~= nil, 'expanded notes directory was not created')
+          helpers.eq('directory', stat.type, 'expanded notes path is not a directory')
+          helpers.eq(expected, taxon.config.notes_dir, 'setup did not expand notes_dir')
+        end, debug.traceback)
+
+        vim.env.HOME = original_home
+
+        if not ok then
+          error(err)
+        end
+      end)
+    end,
+  },
+  {
+    name = 'scan_notes normalizes an existing tilde-prefixed notes_dir',
+    run = function()
+      helpers.with_temp_dir(function(temp_dir)
+        local original_home = vim.env.HOME
+        local expected = vim.fs.joinpath(temp_dir, 'notes')
+
+        vim.env.HOME = temp_dir
+
+        local ok, err = xpcall(function()
+          taxon.config.notes_dir = '~/notes'
+
+          local model = taxon.scan_notes()
+          local stat = vim.uv.fs_stat(expected)
+
+          helpers.truthy(model ~= nil, 'scan_notes did not return a model')
+          helpers.truthy(stat ~= nil, 'scan_notes did not create the expanded directory')
+          helpers.eq(expected, taxon.config.notes_dir, 'scan_notes did not normalize notes_dir')
+        end, debug.traceback)
+
+        vim.env.HOME = original_home
+
+        if not ok then
+          error(err)
+        end
+      end)
+    end,
+  },
+  {
     name = 'create_note writes the canonical file and opens it',
     run = function()
       helpers.with_temp_dir(function(temp_dir)

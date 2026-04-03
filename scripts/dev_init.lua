@@ -1,7 +1,7 @@
 local source = debug.getinfo(1, 'S').source:sub(2)
 local root = vim.fn.fnamemodify(source, ':p:h:h')
 local user_init = vim.fs.joinpath(vim.fn.stdpath('config'), 'init.lua')
-local notes_dir = vim.env.TAXON_DEV_NOTES_DIR or vim.fs.joinpath(root, '.tmp', 'taxon-notes')
+local notes_dir = vim.fn.expand(vim.env.TAXON_DEV_NOTES_DIR or '~/notes')
 
 local function prefer_repo_on_runtimepath()
   vim.opt.runtimepath:remove(root)
@@ -24,7 +24,25 @@ local function source_user_init(path)
     return
   end
 
-  local ok, err = pcall(dofile, path)
+  local original_loaded = package.loaded.taxon
+  local original_preload = package.preload.taxon
+
+  package.loaded.taxon = {
+    setup = function()
+      return nil
+    end,
+  }
+  package.preload.taxon = function()
+    return package.loaded.taxon
+  end
+
+  local ok, err = xpcall(function()
+    dofile(path)
+  end, debug.traceback)
+
+  package.loaded.taxon = original_loaded
+  package.preload.taxon = original_preload
+
   if ok then
     return
   end
