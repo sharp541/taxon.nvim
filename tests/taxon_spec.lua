@@ -269,6 +269,9 @@ return {
       end
 
       local ok, err = pcall(taxon.new_note)
+      local waited = vim.wait(1000, function()
+        return captured_title ~= nil
+      end)
 
       vim.ui.input = original_input
       taxon.create_note = original_create_note
@@ -277,6 +280,7 @@ return {
         error(err)
       end
 
+      helpers.truthy(waited, 'new_note did not invoke create_note')
       helpers.eq('Taxon title: ', captured_prompt)
       helpers.eq('Polished Note', captured_title)
     end,
@@ -305,6 +309,9 @@ return {
       end
 
       local ok, err = pcall(taxon.new_note)
+      local waited = vim.wait(1000, function()
+        return #notifications > 0
+      end)
 
       vim.notify = original_notify
       vim.ui.input = original_input
@@ -314,6 +321,7 @@ return {
         error(err)
       end
 
+      helpers.truthy(waited, 'new_note did not report the create error')
       helpers.eq({
         {
           level = vim.log.levels.ERROR,

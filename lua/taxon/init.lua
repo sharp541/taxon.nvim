@@ -152,10 +152,12 @@ function M.new_note()
       return
     end
 
-    local _, err = M.create_note(input)
-    if err ~= nil then
-      notify_create_error(err)
-    end
+    vim.schedule(function()
+      local _, err = M.create_note(input)
+      if err ~= nil then
+        notify_create_error(err)
+      end
+    end)
   end)
 end
 
